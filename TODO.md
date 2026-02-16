@@ -8,7 +8,12 @@
 
 ## Immediate Tasks
 
-None - all tasks completed.
+- [ ] **Local host scripts for maclike/winlike swap**
+  - Bash scripts in `tools/` or similar for quick mode switching
+  - `switch-maclike.sh` — runs `ui-mode maclike` with DBUS auto-detection
+  - `switch-winlike.sh` — runs `ui-mode winlike` with DBUS auto-detection
+  - Handle case where GNOME is not running (save preference for next login)
+  - Could also be a single script: `desktop-mode [winlike|maclike]`
 
 ## Platform Support
 

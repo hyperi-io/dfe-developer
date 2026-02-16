@@ -16,7 +16,7 @@
 #   --tags-include TAGS  Include specific tags to run (comma-separated)
 #   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
 #   --core               Install core developer tools (JFrog, Azure, Node.js, etc.)
-#   --all                Install everything (base + core + VM + RDP + maclike)
+#   --all                Install everything (base + core + VM + RDP + winlike)
 #   --help               Show this help message
 #
 # SUPPORTED PLATFORMS:
@@ -55,7 +55,7 @@ OPTIONS:
   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
   --branch BRANCH      Git branch to use (default: main)
   --core               Shortcut for: --tags developer,base,core,advanced
-  --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,maclike
+  --all                Shortcut for: --tags developer,base,core,advanced,vm,optimizer,rdp,winlike
   --region REGION      Apply regional settings (e.g. au, en_AU.UTF-8)
   --help               Show this help message
 
@@ -108,8 +108,8 @@ EXAMPLES:
   Install everything except wallpaper:
     ./install.sh --all --tags-exclude wallpaper
 
-  Install everything with Windows-style (winlike overrides default maclike):
-    ./install.sh --all --tags winlike
+  Install everything with macOS-style (maclike overrides default winlike):
+    ./install.sh --all --tags maclike
 
   Install RDP support for remote desktop access:
     ./install.sh --tags developer,base,rdp
@@ -118,7 +118,7 @@ EXAMPLES:
     ./install.sh --check
 
 NOTES:
-  - If both winlike and maclike are included, winlike takes precedence (overrides default)
+  - If both winlike and maclike are included, maclike takes precedence (overrides default)
   - RDP configures GNOME Remote Desktop with default credentials (dfe/dfe)
   - ghostty, fastestmirror, and wallpaper are included by default
   - Use --tags-exclude to disable default features without specifying all tags
@@ -166,7 +166,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --all)
-            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,maclike"
+            ANSIBLE_TAGS="--tags developer,base,core,advanced,vm,optimizer,rdp,winlike"
             shift
             ;;
         --region)
@@ -184,13 +184,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Handle winlike/maclike priority: winlike overrides maclike (since maclike is default in --all)
-# If both are specified, remove maclike from tags
-if [[ "$ANSIBLE_TAGS" == *"winlike"* ]] && [[ "$ANSIBLE_TAGS" == *"maclike"* ]]; then
-    print_info "Both winlike and maclike specified - using winlike (winlike overrides default maclike)"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//,maclike/}"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike,/}"
-    ANSIBLE_TAGS="${ANSIBLE_TAGS//maclike/}"
+# Handle winlike/maclike priority: maclike overrides winlike (since winlike is default in --all)
+# If both are specified, remove winlike from tags
+if [[ "$ANSIBLE_TAGS" == *"maclike"* ]] && [[ "$ANSIBLE_TAGS" == *"winlike"* ]]; then
+    print_info "Both winlike and maclike specified - using maclike (maclike overrides default winlike)"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//,winlike/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike,/}"
+    ANSIBLE_TAGS="${ANSIBLE_TAGS//winlike/}"
 fi
 
 # Handle --region: resolve short codes to full locale, add tag and extra var
