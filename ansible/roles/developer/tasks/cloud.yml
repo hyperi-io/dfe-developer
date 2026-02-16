@@ -14,9 +14,17 @@
         dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
         mode: '0644'
 
+    # Map unsupported Ubuntu releases to nearest supported LTS
+    # HashiCorp only publishes repos for LTS releases (jammy, noble)
+    - name: Determine HashiCorp repo codename
+      ansible.builtin.set_fact:
+        hashicorp_codename: >-
+          {{ (ansible_facts['distribution_version'] is version('24.04', '>'))
+             | ternary('noble', ansible_facts['distribution_release']) }}
+
     - name: Add HashiCorp repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main"
+        repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ hashicorp_codename }} main"
         filename: hashicorp
         state: present
 

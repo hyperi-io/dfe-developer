@@ -31,9 +31,17 @@
         dest: /etc/apt/keyrings/docker.asc
         mode: '0644'
 
+    # Map unsupported Ubuntu releases to nearest supported LTS
+    # Docker only publishes repos for LTS releases (jammy, noble)
+    - name: Determine Docker repo codename
+      ansible.builtin.set_fact:
+        docker_codename: >-
+          {{ (ansible_facts['distribution_version'] is version('24.04', '>'))
+             | ternary('noble', ansible_facts['distribution_release']) }}
+
     - name: Add Docker repository
       ansible.builtin.apt_repository:
-        repo: "deb [arch={{ docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ docker_repo_url }} {{ ansible_facts['distribution_release'] }} stable"
+        repo: "deb [arch={{ docker_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ docker_repo_url }} {{ docker_codename }} stable"
         filename: docker
         state: present
 
