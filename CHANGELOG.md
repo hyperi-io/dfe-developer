@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.7](https://github.com/hyperi-io/dfe-developer/compare/v2.23.6...v2.23.7) (2026-02-16)
+
+
+### Bug Fixes
+
+* change default --all UI mode from maclike to winlike ([99afa79](https://github.com/hyperi-io/dfe-developer/commit/99afa7997795586d9da18e53dcbda98752a47b38))
+
 ## [2.23.6](https://github.com/hyperi-io/dfe-developer/compare/v2.23.5...v2.23.6) (2026-02-16)
 
 
