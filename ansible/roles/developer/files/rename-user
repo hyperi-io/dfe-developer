@@ -5,6 +5,7 @@
 # Renames the default desktop user (e.g. hyperi) to a new username, updates:
 # - Linux user account (username, group, home directory)
 # - Passwordless sudo configuration
+# - GNOME keyring (reset so PAM auto-unlocks with new password)
 # - GNOME Remote Desktop (RDP) credentials
 # - Local cloud-init default user
 #
@@ -136,12 +137,32 @@ LOG_FILE="/var/log/rename-user.log"
 WORKER_SCRIPT=$(mktemp /tmp/rename-worker.XXXXXX.sh)
 chmod 700 "$WORKER_SCRIPT"
 
-cat > "$WORKER_SCRIPT" << WORKER_EOF
+# Write credentials to secure temp file (avoids shell expansion issues with
+# special characters like $ in passwords when using heredocs)
+CREDS_FILE=$(mktemp /tmp/rename-creds.XXXXXX)
+chmod 600 "$CREDS_FILE"
+printf '%s\n' "$NEW_USER" "$NEW_PASS" "$DEFAULT_USER" "$IP_ADDR" "$WORKER_SCRIPT" > "$CREDS_FILE"
+
+cat > "$WORKER_SCRIPT" << 'WORKER_EOF'
 #!/bin/bash
 set -euo pipefail
+
+# Read credentials from temp file (avoids special character issues)
+CREDS_FILE="$1"
+mapfile -t CREDS < "$CREDS_FILE"
+NEW_USER="${CREDS[0]}"
+NEW_PASS="${CREDS[1]}"
+DEFAULT_USER="${CREDS[2]}"
+IP_ADDR="${CREDS[3]}"
+WORKER_SCRIPT="${CREDS[4]}"
+
+# Securely delete credentials file
+rm -f "$CREDS_FILE"
+
+LOG_FILE="/var/log/rename-user.log"
 exec > "$LOG_FILE" 2>&1
 
-echo "=== rename-user: \$(date '+%Y-%m-%d %H:%M:%S %Z') ==="
+echo "=== rename-user: $(date '+%Y-%m-%d %H:%M:%S %Z') ==="
 echo "Renaming $DEFAULT_USER -> $NEW_USER"
 
 # Wait for parent to finish printing
@@ -166,7 +187,7 @@ groupmod -n "$NEW_USER" "$DEFAULT_USER" 2>/dev/null || true
 echo "Group renamed"
 
 # Set new password
-echo "$NEW_USER:$NEW_PASS" | chpasswd
+printf '%s:%s\n' "$NEW_USER" "$NEW_PASS" | chpasswd
 echo "Password set"
 
 # Update sudoers
@@ -177,6 +198,16 @@ rm -f "/etc/sudoers.d/90-cloud-init-users"
 echo "$NEW_USER ALL=(ALL) NOPASSWD: ALL" > "/etc/sudoers.d/90-${NEW_USER}-nopasswd"
 chmod 440 "/etc/sudoers.d/90-${NEW_USER}-nopasswd"
 echo "Sudoers updated"
+
+# Reset GNOME keyring so it re-creates with the new login password
+# PAM auto-unlocks the login keyring when the keyring password matches
+# the user's login password. Old keyring files use the old password.
+KEYRING_DIR="/home/${NEW_USER}/.local/share/keyrings"
+if [[ -d "$KEYRING_DIR" ]]; then
+    echo "Resetting GNOME keyring..."
+    rm -f "${KEYRING_DIR}"/*.keyring "${KEYRING_DIR}"/default 2>/dev/null || true
+    echo "GNOME keyring reset (will be recreated on next login)"
+fi
 
 # Update RDP credentials
 if command -v grdctl &>/dev/null; then
@@ -200,7 +231,7 @@ echo "=== rename-user: COMPLETE ==="
 echo "Old user: $DEFAULT_USER"
 echo "New user: $NEW_USER"
 echo "Home: /home/$NEW_USER"
-echo "Groups: \$(id -nG "$NEW_USER")"
+echo "Groups: $(id -nG "$NEW_USER")"
 echo ""
 echo "SSH: ssh $NEW_USER@$IP_ADDR"
 echo "RDP: $IP_ADDR:3389 (user: $NEW_USER)"
@@ -219,7 +250,7 @@ print_info "Log: ${LOG_FILE}"
 echo ""
 
 # setsid detaches from the controlling terminal and session
-setsid bash "$WORKER_SCRIPT" &
+setsid bash "$WORKER_SCRIPT" "$CREDS_FILE" &
 disown 2>/dev/null || true
 
 print_info "Your session will be terminated in a few seconds."
