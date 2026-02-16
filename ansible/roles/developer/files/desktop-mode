@@ -1,0 +1,312 @@
+#!/bin/bash
+# ============================================================================
+# desktop-mode - Switch desktop UI between Windows-like and macOS-like
+# ============================================================================
+# Wrapper around ui-mode that auto-detects the GNOME DBUS session and
+# handles the case where GNOME Shell isn't running (saves preference for
+# next login).
+#
+# USAGE:
+#   desktop-mode --winlike       Switch to Windows-like taskbar
+#   desktop-mode --maclike       Switch to macOS-like dock
+#   desktop-mode --status        Show current mode and extension state
+#   desktop-mode --install       Install required GNOME extensions
+#   desktop-mode --reset         Reset to GNOME system defaults
+#
+# EXAMPLES:
+#   desktop-mode --winlike
+#   desktop-mode --maclike
+#   sudo desktop-mode --winlike --user derek    # Switch for another user
+#
+# SUPPORTED PLATFORMS:
+#   - Ubuntu 24.04+
+#   - Fedora 42+
+#
+# LICENSE:
+#   Licensed under the Apache License, Version 2.0
+# ============================================================================
+
+set -euo pipefail
+
+# Colours
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+print_info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
+print_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
+print_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+UI_MODE_BIN="/usr/local/sbin/ui-mode"
+
+# ============================================================================
+# HELP
+# ============================================================================
+
+show_help() {
+    cat << 'EOF'
+desktop-mode - Switch desktop UI between Windows-like and macOS-like
+
+USAGE:
+    desktop-mode <mode> [options]
+
+MODES:
+    --winlike           Windows-style taskbar at bottom (Dash to Panel)
+    --maclike           macOS-style dock with auto-hide (Dash to Dock)
+    --reset             Reset to GNOME system defaults
+
+ACTIONS:
+    --install           Install required GNOME extensions (run once)
+    --status            Show current mode and extension state
+
+OPTIONS:
+    --user <username>   Apply mode for a different user (requires root)
+    --force             Skip distribution/version validation
+    -h, --help          Show this help message
+
+EXAMPLES:
+    desktop-mode --winlike
+    desktop-mode --maclike
+    desktop-mode --status
+    sudo desktop-mode --winlike --user derek
+
+NOTES:
+    If GNOME Shell is running, changes apply immediately.
+    If GNOME Shell is not running (e.g. via SSH), the preference is saved
+    and an autostart entry is created to apply it on next login.
+EOF
+    exit 0
+}
+
+# ============================================================================
+# ARGUMENT PARSING
+# ============================================================================
+
+MODE=""
+ACTION=""
+TARGET_USER=""
+FORCE_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            ;;
+        --winlike)
+            MODE="winlike"
+            shift
+            ;;
+        --maclike)
+            MODE="maclike"
+            shift
+            ;;
+        --reset)
+            MODE="system"
+            shift
+            ;;
+        --install)
+            ACTION="install"
+            shift
+            ;;
+        --status)
+            ACTION="status"
+            shift
+            ;;
+        --user)
+            if [[ -z "${2:-}" ]]; then
+                print_error "--user requires a username argument"
+                exit 1
+            fi
+            TARGET_USER="$2"
+            shift 2
+            ;;
+        --force)
+            FORCE_FLAG="--force"
+            shift
+            ;;
+        -*)
+            print_error "Unknown option: $1"
+            echo "Run 'desktop-mode --help' for usage information."
+            exit 1
+            ;;
+        *)
+            print_error "Unknown argument: $1"
+            echo "Run 'desktop-mode --help' for usage information."
+            exit 1
+            ;;
+    esac
+done
+
+# Validate we have something to do
+if [[ -z "$MODE" ]] && [[ -z "$ACTION" ]]; then
+    print_error "No mode or action specified"
+    echo "Run 'desktop-mode --help' for usage information."
+    exit 1
+fi
+
+# --user requires root
+if [[ -n "$TARGET_USER" ]] && [[ $EUID -ne 0 ]]; then
+    print_error "--user requires root (use sudo)"
+    exit 1
+fi
+
+# Check ui-mode exists
+if [[ ! -x "$UI_MODE_BIN" ]]; then
+    print_error "ui-mode not found at $UI_MODE_BIN"
+    print_error "Run the DFE Developer installer first"
+    exit 1
+fi
+
+# ============================================================================
+# RESOLVE TARGET USER
+# ============================================================================
+
+if [[ -n "$TARGET_USER" ]]; then
+    # Explicit --user flag
+    if ! id "$TARGET_USER" &>/dev/null; then
+        print_error "User '$TARGET_USER' does not exist"
+        exit 1
+    fi
+    RUN_USER="$TARGET_USER"
+elif [[ $EUID -eq 0 ]]; then
+    # Running as root without --user, use SUDO_USER if available
+    if [[ -n "${SUDO_USER:-}" ]] && [[ "$SUDO_USER" != "root" ]]; then
+        RUN_USER="$SUDO_USER"
+    else
+        print_error "Running as root: specify target user with --user <username>"
+        exit 1
+    fi
+else
+    # Running as normal user
+    RUN_USER="$(whoami)"
+fi
+
+USER_HOME=$(getent passwd "$RUN_USER" | cut -d: -f6)
+
+# ============================================================================
+# DBUS AUTO-DETECTION
+# ============================================================================
+
+detect_dbus() {
+    local user="$1"
+    local gnome_pid
+    gnome_pid=$(pgrep -u "$user" -x gnome-shell 2>/dev/null | head -1) || true
+
+    if [[ -z "$gnome_pid" ]]; then
+        return 1
+    fi
+
+    local dbus_addr
+    dbus_addr=$(grep -z DBUS_SESSION_BUS_ADDRESS "/proc/$gnome_pid/environ" 2>/dev/null | tr '\0' '\n') || true
+
+    if [[ -z "$dbus_addr" ]]; then
+        return 1
+    fi
+
+    # Strip the variable name prefix
+    echo "${dbus_addr#DBUS_SESSION_BUS_ADDRESS=}"
+    return 0
+}
+
+# ============================================================================
+# RUN UI-MODE (live session)
+# ============================================================================
+
+run_ui_mode_live() {
+    local command="$1"
+    local dbus_addr="$2"
+
+    if [[ $EUID -eq 0 ]] && [[ "$RUN_USER" != "root" ]]; then
+        # Running as root, switch to target user
+        su - "$RUN_USER" -c "DBUS_SESSION_BUS_ADDRESS='$dbus_addr' $UI_MODE_BIN $FORCE_FLAG $command"
+    else
+        # Running as the target user already
+        DBUS_SESSION_BUS_ADDRESS="$dbus_addr" "$UI_MODE_BIN" $FORCE_FLAG "$command"
+    fi
+}
+
+# ============================================================================
+# SAVE PREFERENCE FOR NEXT LOGIN (no GNOME session)
+# ============================================================================
+
+save_preference() {
+    local mode="$1"
+    local config_dir="$USER_HOME/.config/devenv"
+    local autostart_dir="$USER_HOME/.config/autostart"
+
+    # Save mode preference
+    mkdir -p "$config_dir"
+    echo "$mode" > "$config_dir/ui-mode"
+    chown -R "$RUN_USER:$RUN_USER" "$config_dir"
+
+    # Create autostart entry to apply on first login
+    mkdir -p "$autostart_dir"
+    cat > "$autostart_dir/devenv-ui-mode.desktop" << 'DESKTOP_EOF'
+[Desktop Entry]
+Type=Application
+Name=DevEnv UI Mode
+Comment=Apply UI mode on first login
+Exec=/bin/bash -c 'if [ -f ~/.config/devenv/ui-mode ]; then /usr/local/sbin/ui-mode --apply && rm -f ~/.config/autostart/devenv-ui-mode.desktop; fi'
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=3
+DESKTOP_EOF
+    chown -R "$RUN_USER:$RUN_USER" "$autostart_dir"
+
+    print_info "Preference saved: $mode"
+    print_info "Will apply automatically on next GNOME login"
+}
+
+# ============================================================================
+# HANDLE STATUS (informational, runs as target user)
+# ============================================================================
+
+if [[ "$ACTION" == "status" ]]; then
+    dbus_addr=$(detect_dbus "$RUN_USER") || true
+    if [[ -n "$dbus_addr" ]]; then
+        run_ui_mode_live "status" "$dbus_addr"
+    else
+        # Show what we can without GNOME running
+        saved_mode="none"
+        state_file="$USER_HOME/.config/devenv/ui-mode"
+        if [[ -f "$state_file" ]]; then
+            saved_mode=$(cat "$state_file")
+        fi
+        echo "GNOME Shell is not running for user $RUN_USER"
+        echo "Saved mode preference: $saved_mode"
+    fi
+    exit 0
+fi
+
+# ============================================================================
+# HANDLE INSTALL (requires live GNOME session)
+# ============================================================================
+
+if [[ "$ACTION" == "install" ]]; then
+    dbus_addr=$(detect_dbus "$RUN_USER") || true
+    if [[ -z "$dbus_addr" ]]; then
+        print_error "GNOME Shell is not running for user $RUN_USER"
+        print_error "--install requires a live GNOME session"
+        exit 1
+    fi
+    run_ui_mode_live "--install" "$dbus_addr"
+    exit 0
+fi
+
+# ============================================================================
+# HANDLE MODE SWITCH
+# ============================================================================
+
+if [[ -n "$MODE" ]]; then
+    dbus_addr=$(detect_dbus "$RUN_USER") || true
+    if [[ -n "$dbus_addr" ]]; then
+        print_info "GNOME session detected, applying $MODE mode live..."
+        run_ui_mode_live "$MODE" "$dbus_addr"
+    else
+        print_warn "GNOME Shell is not running for user $RUN_USER"
+        save_preference "$MODE"
+    fi
+    exit 0
+fi

@@ -222,3 +222,13 @@
     group: root
     mode: '0755'
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+
+# desktop-mode - Switch desktop UI between winlike and maclike with DBUS auto-detection
+- name: Install desktop-mode script
+  ansible.builtin.copy:
+    src: desktop-mode
+    dest: /usr/local/sbin/desktop-mode
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']

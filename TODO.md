@@ -8,12 +8,17 @@
 
 ## Immediate Tasks
 
-- [ ] **Local host scripts for maclike/winlike swap**
-  - Bash scripts in `tools/` or similar for quick mode switching
-  - `switch-maclike.sh` — runs `ui-mode maclike` with DBUS auto-detection
-  - `switch-winlike.sh` — runs `ui-mode winlike` with DBUS auto-detection
-  - Handle case where GNOME is not running (save preference for next login)
-  - Could also be a single script: `desktop-mode [winlike|maclike]`
+- [x] **desktop-mode script for maclike/winlike swap**
+  - Single script: `desktop-mode --winlike` / `desktop-mode --maclike`
+  - Auto-detects DBUS from running GNOME session
+  - Falls back to saved preference + autostart when GNOME not running
+  - Supports `--user <name>` for cross-user switching (requires root)
+  - Deployed to `/usr/local/sbin/desktop-mode` via Ansible
+
+- [ ] **maclike toast/notification bug**
+  - Ghostty numeric toasts never seem to clear in maclike taskbar
+  - Notifications stack up and persist instead of dismissing
+  - Investigate whether this is Dash to Dock or GNOME Shell issue
 
 ## Platform Support
 
