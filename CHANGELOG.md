@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.9](https://github.com/hyperi-io/dfe-developer/compare/v2.23.8...v2.23.9) (2026-02-16)
+
+
+### Bug Fixes
+
+* add desktop-mode script for winlike/maclike switching ([2373c42](https://github.com/hyperi-io/dfe-developer/commit/2373c42b8d69ef7fd76e7ddcc1ae577fc53d9071))
+
 ## [2.23.8](https://github.com/hyperi-io/dfe-developer/compare/v2.23.7...v2.23.8) (2026-02-16)
 
 
