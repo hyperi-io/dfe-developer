@@ -31,9 +31,17 @@
         dest: /etc/apt/keyrings/openvpn.asc
         mode: '0644'
 
+    # Map unsupported Ubuntu releases to nearest supported LTS
+    # OpenVPN 3 only publishes repos for LTS releases (jammy, noble)
+    - name: Determine OpenVPN repo codename
+      ansible.builtin.set_fact:
+        openvpn_codename: >-
+          {{ (ansible_facts['distribution_version'] is version('24.04', '>'))
+             | ternary('noble', ansible_facts['distribution_release']) }}
+
     - name: Add OpenVPN 3 repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian {{ ansible_facts['distribution_release'] }} main"
+        repo: "deb [signed-by=/etc/apt/keyrings/openvpn.asc] https://packages.openvpn.net/openvpn3/debian {{ openvpn_codename }} main"
         filename: openvpn3
         state: present
 
@@ -46,7 +54,11 @@
   rescue:
     - name: Warn about OpenVPN 3 installation failure
       ansible.builtin.debug:
-        msg: "⚠️  WARNING: OpenVPN 3 installation failed (repository may not support {{ ansible_facts['distribution_release'] }} yet). Install manually if needed for SSO web auth."
+        msg: "WARNING: OpenVPN 3 installation failed (repository may not support {{ ansible_facts['distribution_release'] }} yet). Install manually if needed for SSO web auth."
+
+    - name: Set OpenVPN 3 install failed fact
+      ansible.builtin.set_fact:
+        openvpn3_install_failed: true
 
   when: ansible_facts['distribution'] == 'Ubuntu'
 
