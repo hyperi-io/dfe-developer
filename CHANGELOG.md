@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.6](https://github.com/hyperi-io/dfe-developer/compare/v2.23.5...v2.23.6) (2026-02-16)
+
+
+### Bug Fixes
+
+* rename-user heredoc expansion bug and keyring reset ([ef73811](https://github.com/hyperi-io/dfe-developer/commit/ef73811b55e0f44a10d84aabe6cbfde662cda9b7))
+
 ## [2.23.5](https://github.com/hyperi-io/dfe-developer/compare/v2.23.4...v2.23.5) (2026-02-16)
 
 
