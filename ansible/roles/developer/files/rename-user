@@ -4,6 +4,7 @@
 # ============================================================================
 # Renames the default desktop user (e.g. hyperi) to a new username, updates:
 # - Linux user account (username, group, home directory)
+# - Absolute symlinks in home directory (uv, gext, Claude, etc.)
 # - Passwordless sudo configuration
 # - GNOME keyring (reset so PAM auto-unlocks with new password)
 # - GNOME Remote Desktop (RDP) credentials
@@ -179,12 +180,30 @@ sleep 2
 
 # Rename user account and move home directory
 echo "Renaming user..."
-usermod -l "$NEW_USER" -d "/home/$NEW_USER" -m "$DEFAULT_USER"
+OLD_HOME="/home/${DEFAULT_USER}"
+NEW_HOME="/home/${NEW_USER}"
+usermod -l "$NEW_USER" -d "$NEW_HOME" -m "$DEFAULT_USER"
 echo "User renamed"
 
 # Rename primary group
 groupmod -n "$NEW_USER" "$DEFAULT_USER" 2>/dev/null || true
 echo "Group renamed"
+
+# Fix symlinks that still reference the old home directory
+# usermod -m moves the directory but doesn't rewrite absolute symlinks
+# inside it. Tools like uv, gext, Claude, etc. create absolute symlinks
+# pointing to /home/<olduser>/... which break after the move.
+echo "Fixing symlinks referencing old home path..."
+FIXED_LINKS=0
+while IFS= read -r -d '' link; do
+    target=$(readlink "$link")
+    new_target="${target/#${OLD_HOME}/${NEW_HOME}}"
+    if [[ "$new_target" != "$target" ]]; then
+        ln -sfn "$new_target" "$link"
+        (( FIXED_LINKS++ ))
+    fi
+done < <(find "$NEW_HOME" -type l -print0 2>/dev/null)
+echo "Fixed ${FIXED_LINKS} symlinks"
 
 # Set new password
 printf '%s:%s\n' "$NEW_USER" "$NEW_PASS" | chpasswd
