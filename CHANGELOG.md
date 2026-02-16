@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.8](https://github.com/hyperi-io/dfe-developer/compare/v2.23.7...v2.23.8) (2026-02-16)
+
+
+### Bug Fixes
+
+* rewrite broken symlinks after home directory rename ([0d14135](https://github.com/hyperi-io/dfe-developer/commit/0d14135d1b360defccbbbde81e636d7a1a4c8756))
+
 ## [2.23.7](https://github.com/hyperi-io/dfe-developer/compare/v2.23.6...v2.23.7) (2026-02-16)
 
 
