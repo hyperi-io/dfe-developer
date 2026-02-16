@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.5](https://github.com/hyperi-io/dfe-developer/compare/v2.23.4...v2.23.5) (2026-02-16)
+
+
+### Bug Fixes
+
+* add LTS codename fallback for OpenVPN3 repo on Ubuntu interim releases ([2427e01](https://github.com/hyperi-io/dfe-developer/commit/2427e0194101f3732786c8f5496d8e25cb781a3c))
+
 ## [2.23.4](https://github.com/hyperi-io/dfe-developer/compare/v2.23.3...v2.23.4) (2026-02-16)
 
 
