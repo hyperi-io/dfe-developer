@@ -5,36 +5,30 @@
 # 2. Runtime: Deploy service that auto-enables when VA-API becomes available later
 
 # ============================================================================
-# INSTALL VAINFO FOR VA-API DETECTION
+# INSTALL VA-API DRIVERS AND DETECTION TOOLS
 # ============================================================================
+# mesa-va-drivers provides the Gallium VA-API state tracker for virtio-gpu
+# Without it, VA-API init fails system-wide causing errors in apps (VS Code, etc.)
 
-- name: Check if vainfo is available
-  ansible.builtin.command:
-    cmd: which vainfo
-  register: vainfo_check
-  failed_when: false
-  changed_when: false
-  when:
-    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
-    - has_gnome
-
-- name: Install libva-utils for VA-API detection (Fedora)
+- name: Install mesa-va-drivers (Fedora)
   ansible.builtin.dnf:
-    name: libva-utils
+    name:
+      - mesa-va-drivers
+      - libva-utils
     state: present
   when:
     - ansible_facts['distribution'] == 'Fedora'
     - has_gnome
-    - vainfo_check.rc != 0
 
-- name: Install vainfo for VA-API detection (Ubuntu)
+- name: Install mesa-va-drivers (Ubuntu)
   ansible.builtin.apt:
-    name: vainfo
+    name:
+      - mesa-va-drivers
+      - vainfo
     state: present
   when:
     - ansible_facts['distribution'] == 'Ubuntu'
     - has_gnome
-    - vainfo_check.rc != 0
 
 # ============================================================================
 # DEPLOY AUTO-DETECTION SERVICE (runs on every boot)

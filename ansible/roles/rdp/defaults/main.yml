@@ -6,3 +6,7 @@
 # Change these in your inventory or playbook vars to customize
 rdp_username: "hyperi"
 rdp_password: "hyperi"
+
+# Display refresh rate (Hz) - lower values reduce software encoding CPU load
+# Only relevant for VMs using software RFX encoding (no VA-API H.264)
+rdp_refresh_rate: 30

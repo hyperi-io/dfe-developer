@@ -24,6 +24,48 @@
   changed_when: false
 
 # ============================================================================
+# GRD PROCESS PRIORITY (reduce lag from software encoding)
+# ============================================================================
+# Software RFX encoding on virtio-gpu VMs is CPU-intensive. Boosting the GRD
+# process priority prevents it from being starved by other workloads.
+
+- name: Create GRD system service drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/gnome-remote-desktop.service.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Create GRD user handover service drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/user/gnome-remote-desktop-handover.service.d
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Deploy GRD priority override (system service)
+  ansible.builtin.copy:
+    src: grd-priority.conf
+    dest: /etc/systemd/system/gnome-remote-desktop.service.d/priority.conf
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+- name: Deploy GRD priority override (user handover service)
+  ansible.builtin.copy:
+    src: grd-priority.conf
+    dest: /etc/systemd/user/gnome-remote-desktop-handover.service.d/priority.conf
+    mode: '0644'
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+
+# ============================================================================
 # ENABLE GNOME REMOTE DESKTOP SERVICE
 # ============================================================================
 
