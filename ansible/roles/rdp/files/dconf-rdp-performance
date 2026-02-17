@@ -1,0 +1,6 @@
+# RDP performance optimisations for GNOME desktop
+# Deployed to /etc/dconf/db/local.d/00-rdp-performance
+# Run 'dconf update' after changes
+
+[org/gnome/desktop/interface]
+enable-animations=false

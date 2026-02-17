@@ -1,23 +1,33 @@
 ---
 # GNOME dconf settings for RDP optimization
+# Uses system-wide dconf profile (/etc/dconf/db/local.d/) instead of
+# per-user dconf writes, which require a D-Bus session and fail over SSH.
 
 # Note: Most RDP settings are configured via grdctl in service.yml
-# This file handles GNOME desktop optimizations for RDP performance
-# psutil is installed in developer/tasks/init.yml (consolidated there for all GNOME tasks)
+# This file handles GNOME desktop optimisations for RDP performance
 
-- name: Disable GNOME animations for RDP performance
-  community.general.dconf:
-    key: "/org/gnome/desktop/interface/enable-animations"
-    value: "false"
-    state: present
-  become: false
+- name: Deploy RDP performance dconf profile
+  ansible.builtin.copy:
+    src: dconf-rdp-performance
+    dest: /etc/dconf/db/local.d/00-rdp-performance
+    mode: '0644'
+  register: rdp_dconf_deployed
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
 
+- name: Update dconf database
+  ansible.builtin.command:
+    cmd: dconf update
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+    - rdp_dconf_deployed.changed | default(false)
+  changed_when: true
+
 - name: Display dconf status
   ansible.builtin.debug:
-    msg: "GNOME Remote Desktop configured via grdctl (system service mode) - animations disabled for RDP performance"
+    msg: "GNOME Remote Desktop configured via grdctl (system service mode) - animations disabled via system dconf profile"
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
