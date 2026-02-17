@@ -37,6 +37,7 @@
     name:
       - qemu-guest-agent
       - spice-vdagent
+      - mesa-va-drivers
     state: present
   when:
     - ansible_facts['distribution'] == 'Fedora'
@@ -47,6 +48,7 @@
     name:
       - qemu-guest-agent
       - spice-vdagent
+      - mesa-va-drivers
     state: present
   when:
     - ansible_facts['distribution'] == 'Ubuntu'
