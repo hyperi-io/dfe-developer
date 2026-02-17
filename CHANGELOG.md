@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.12](https://github.com/hyperi-io/dfe-developer/compare/v2.23.11...v2.23.12) (2026-02-17)
+
+
+### Bug Fixes
+
+* remove duplicate mesa-va-drivers from vm_tools (already in rdp role) ([9e445df](https://github.com/hyperi-io/dfe-developer/commit/9e445dfb047097a81eb530b285da142d09390951))
+
 ## [2.23.11](https://github.com/hyperi-io/dfe-developer/compare/v2.23.10...v2.23.11) (2026-02-17)
 
 
