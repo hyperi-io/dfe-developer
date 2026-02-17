@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.13](https://github.com/hyperi-io/dfe-developer/compare/v2.23.12...v2.23.13) (2026-02-17)
+
+
+### Bug Fixes
+
+* use system dconf profile for RDP animation disable ([cc097c0](https://github.com/hyperi-io/dfe-developer/commit/cc097c0447655e76e15e1bbad430cf505db29dcf))
+
 ## [2.23.12](https://github.com/hyperi-io/dfe-developer/compare/v2.23.11...v2.23.12) (2026-02-17)
 
 
