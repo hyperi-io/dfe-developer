@@ -1,56 +1,40 @@
 ---
-# GPU Group Configuration for VirGL/virtio-gl Acceleration
-# Ensures all non-system users can access GPU render nodes for hardware acceleration
-# Without this, gnome-remote-desktop sessions fall back to software rendering (CPU-intensive)
+# GPU Access Configuration for VirGL/virtio-gl Acceleration
+# Uses udev rule to make /dev/dri/* world-readable (mode 0666).
+# Any process can access the GPU without needing render/video group membership.
+#
+# Conditional: only runs if /dev/dri exists (GPU present).
+# Works for both VirGL (VM) and physical GPUs (AMD/NVIDIA).
 
 # ============================================================================
-# ENSURE GPU GROUPS EXIST
+# DETECT GPU PRESENCE
 # ============================================================================
 
-- name: Ensure render group exists
-  ansible.builtin.group:
-    name: render
-    state: present
-    system: true
-  when:
-    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
-    - has_gnome
-
-- name: Ensure video group exists
-  ansible.builtin.group:
-    name: video
-    state: present
-    system: true
+- name: Check if /dev/dri exists (GPU present)
+  ansible.builtin.stat:
+    path: /dev/dri
+  register: dri_device
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
 
 # ============================================================================
-# ADD ALL NON-SYSTEM USERS TO GPU GROUPS
+# UDEV RULE FOR WORLD-READABLE GPU DEVICES
 # ============================================================================
 
-- name: Get list of non-system users (UID 1000-60000)
-  ansible.builtin.shell:
-    cmd: "awk -F: '$3 >= 1000 && $3 < 60000 && $1 != \"nobody\" {print $1}' /etc/passwd"
-  register: non_system_users
-  changed_when: false
+- name: Deploy udev rule for GPU device permissions
+  ansible.builtin.copy:
+    dest: /etc/udev/rules.d/99-gpu-open-access.rules
+    mode: "0644"
+    content: |
+      # Allow all processes GPU access without render/video group membership
+      # Managed by Ansible (dfe-developer rdp role)
+      SUBSYSTEM=="drm", MODE="0666"
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
-
-- name: Add non-system users to render and video groups
-  ansible.builtin.user:
-    name: "{{ item }}"
-    groups:
-      - render
-      - video
-    append: true
-  loop: "{{ non_system_users.stdout_lines | default([]) }}"
-  when:
-    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
-    - has_gnome
-    - non_system_users.stdout_lines is defined
-    - non_system_users.stdout_lines | length > 0
+    - dri_device.stat.exists | default(false)
+  notify: reload udev rules
 
 # ============================================================================
 # VERIFY GPU ACCESS
@@ -63,16 +47,26 @@
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
+    - dri_device.stat.exists | default(false)
 
-- name: Display GPU group configuration status
+- name: Display GPU configuration status
   ansible.builtin.debug:
     msg: |
-      GPU Groups configured for VirGL acceleration:
-      - Users added to render/video groups: {{ non_system_users.stdout_lines | default([]) | join(', ') }}
-      - Render device (/dev/dri/renderD128): {{ 'PRESENT' if render_device.stat.exists | default(false) else 'NOT FOUND (not a VM or no virtio-gl)' }}
+      GPU access configured via udev rule (world-readable):
+      - Rule: /etc/udev/rules.d/99-gpu-open-access.rules
+      - /dev/dri: PRESENT
+      - Render device (/dev/dri/renderD128): {{ 'PRESENT' if render_device.stat.exists | default(false) else 'NOT FOUND' }}
 
-      Note: Users must log out and back in for group changes to take effect.
-      For RDP sessions, restart gnome-remote-desktop: systemctl restart gnome-remote-desktop
+      All processes can access GPU devices without group membership.
   when:
     - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
     - has_gnome
+    - dri_device.stat.exists | default(false)
+
+- name: Display GPU skipped status
+  ansible.builtin.debug:
+    msg: "No GPU detected (/dev/dri not present) - skipping GPU configuration"
+  when:
+    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
+    - has_gnome
+    - not (dri_device.stat.exists | default(false))
