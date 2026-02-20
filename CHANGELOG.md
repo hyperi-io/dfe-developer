@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.14](https://github.com/hyperi-io/dfe-developer/compare/v2.23.13...v2.23.14) (2026-02-20)
+
+
+### Bug Fixes
+
+* replace PAM GPU group approach with udev world-readable rule ([fff2cc2](https://github.com/hyperi-io/dfe-developer/commit/fff2cc275ad2eff4c885d406320de9850690cc81))
+
 ## [2.23.13](https://github.com/hyperi-io/dfe-developer/compare/v2.23.12...v2.23.13) (2026-02-17)
 
 
