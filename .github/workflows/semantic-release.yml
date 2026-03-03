@@ -7,9 +7,12 @@
 name: Semantic Release
 
 on:
-  push:
-    branches:
-      - main
+  # Only release after CI passes — prevents publishing broken code.
+  # workflow_run fires when the named workflow completes on main.
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -20,6 +23,10 @@ permissions:
 jobs:
   release:
     name: Create Version and Tag
+    # Skip if CI failed (workflow_dispatch always runs)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}
 
     steps:
