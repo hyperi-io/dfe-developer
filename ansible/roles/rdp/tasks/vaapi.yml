@@ -16,6 +16,8 @@
       - mesa-va-drivers
       - libva-utils
     state: present
+  register: rdp_vaapi_fedora_install
+  ignore_errors: true
   when:
     - ansible_facts['distribution'] == 'Fedora'
     - has_gnome
@@ -26,9 +28,19 @@
       - mesa-va-drivers
       - vainfo
     state: present
+  register: rdp_vaapi_ubuntu_install
+  ignore_errors: true
   when:
     - ansible_facts['distribution'] == 'Ubuntu'
     - has_gnome
+
+- name: Warn if VA-API driver install failed (Ubuntu)
+  ansible.builtin.debug:
+    msg: "VA-API driver install failed ({{ rdp_vaapi_ubuntu_install.msg | default('unknown') }}). CPU encoding fallback will be used."
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - has_gnome
+    - rdp_vaapi_ubuntu_install is failed
 
 # ============================================================================
 # DEPLOY AUTO-DETECTION SERVICE (runs on every boot)
