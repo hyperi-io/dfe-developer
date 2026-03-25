@@ -67,6 +67,11 @@
     file: pam_nice.yml
   tags: ['pam_nice']
 
+- name: Deploy patched GRD with max-framerate support
+  ansible.builtin.include_tasks:
+    file: grd_patched.yml
+  tags: ['grd_patched']
+
 - name: Verify RDP optimizations
   ansible.builtin.include_tasks:
     file: verify.yml

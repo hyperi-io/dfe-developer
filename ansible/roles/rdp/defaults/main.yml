@@ -11,3 +11,7 @@ rdp_password: "hyperi"
 # ubuntu0.3 is broken (heap corruption). Base 3.16.0+dfsg-2 is known-good.
 # See ~/RDP-FREERDP-FIX.md for details.
 freerdp_pin_version: "3.16.0+dfsg-2ubuntu0.4"
+
+# Patched GRD version with configurable max-framerate gsettings key
+# Stock GRD 49.0 hardcodes 60fps. This build reads from gsettings.
+grd_patched_version: "49.0-0ubuntu1.1hyperi1"
