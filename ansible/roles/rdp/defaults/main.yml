@@ -7,6 +7,7 @@
 rdp_username: "hyperi"
 rdp_password: "hyperi"
 
-# Display refresh rate (Hz) - lower values reduce software encoding CPU load
-# Only relevant for VMs using software RFX encoding (no VA-API H.264)
-rdp_refresh_rate: 30
+# FreeRDP library version to pin (Ubuntu only)
+# ubuntu0.3 is broken (heap corruption). Base 3.16.0+dfsg-2 is known-good.
+# See ~/RDP-FREERDP-FIX.md for details.
+freerdp_pin_version: "3.16.0+dfsg-2ubuntu0.4"
