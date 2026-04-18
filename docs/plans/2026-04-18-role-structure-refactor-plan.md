@@ -1818,42 +1818,96 @@ git commit -m "test(oss-safe): add post-install assertion against Hyperi leaks i
 
 Context: the check-mode matrix caught Ansible-level regressions. Real-VM smoke tests catch packaging and sequencing regressions.
 
-**Infrastructure note (2026-04-18):** `proxmox.tyrell.com.au` is offline for approximately one week, so the tyrell-hosted `dfe-dev-u.tyrell.com.au` VM is unreachable during that window. Options:
+**Test infrastructure (2026-04-18):** `proxmox.tyrell.com.au` is offline for ~1 week, so use the **devex Proxmox** at `devex.hyperi.io:8006` instead. The canonical Ubuntu 24.04 test template is **VMID 9010**.
 
-1. **Preferred:** wait until `proxmox.tyrell.com.au` is back online, then proceed as written.
-2. **Alternative — local VM via multipass (Ubuntu) or virt-manager/libvirt:** spin up a clean Ubuntu 24.04 VM locally, point the inventory at it (edit `ansible/inventories/localhost/inventory.yml` or use an ad-hoc `-i` flag). Snapshot before each run.
-3. **Alternative — devex Proxmox (`devex.hyperi.io:8006`):** provision a disposable Ubuntu 24.04 VM there if one isn't already available.
-4. **Fallback (weakest):** extend the check-mode matrix coverage and defer the real-VM smoke test to a follow-up PR once Proxmox is back. Record this as a merge condition in the PR body.
+**Fedora testing is deferred** for this refactor — no Fedora VM is currently available. Fedora-specific tasks (dnf blocks, Fedora-only conditionals) rely on check-mode syntax validation only. A follow-up run once a Fedora template exists on `devex.hyperi.io` will close this gap; track as a follow-up item in TODO.md.
 
-Pick the option that matches availability and proceed.
+- [ ] **Step 0: Provision a fresh test VM from VMID 9010**
 
-- [ ] **Step 1: Run `--profile developer` on a fresh Ubuntu 24.04 VM**
+Clone the Ubuntu 24.04 template to a disposable test VM. Run from the devex Proxmox host (`ssh root@devex.hyperi.io`) or via the Proxmox UI:
 
-Provision or reset the VM at `dfe-dev-u.tyrell.com.au`. The VM is a Proxmox guest — reset via snapshot rollback in the Proxmox UI (https://devex.hyperi.io:8006) to a pre-install snapshot, or re-create from the template. The inventory is defined in `test.sh`'s built-in help — adapt to the FQDN and credentials for your VM. If no pre-install snapshot exists, create one before this task: install the VM from ISO, create a snapshot named `dfe-base`, then roll back to that snapshot between test runs. Run:
+```bash
+# Pick an unused VMID for the clone (e.g., 9100).
+CLONE_ID=9100
+qm clone 9010 $CLONE_ID --name dfe-test-ubuntu-2404 --full
+qm start $CLONE_ID
+# Wait ~60s for boot, then find the IP:
+qm guest exec $CLONE_ID -- ip -4 -o addr show scope global
+```
+
+Record the IP or assigned hostname. The template is expected to have:
+- Ubuntu 24.04 base install
+- `dfe` user with passwordless sudo and the user's SSH key in `authorized_keys`
+- SSH reachable on port 22
+
+If the template hasn't been set up that way, log in via the Proxmox console once, create the user, paste the key, then snapshot before proceeding.
+
+- [ ] **Step 0b: Create `/tmp/inventory_test.yml` pointing at the clone**
+
+```bash
+cat > /tmp/inventory_test.yml << 'EOF'
+[ubuntu]
+dfe-test-ubuntu-2404 ansible_host=<CLONE_IP> ansible_user=dfe ansible_become_password=dfe
+EOF
+```
+
+Replace `<CLONE_IP>` with the IP from Step 0. (If passwordless sudo is already configured for `dfe`, drop the `ansible_become_password=` entry.)
+
+- [ ] **Step 0c: Take a pre-install snapshot**
+
+```bash
+qm snapshot $CLONE_ID pre-dfe
+```
+
+This snapshot is the rollback point between the two smoke-test runs (`--profile developer` then `--profile core,all`). After each test, roll back with:
+
+```bash
+qm rollback $CLONE_ID pre-dfe
+qm start $CLONE_ID
+```
+
+- [ ] **Step 0d: Cleanup policy**
+
+When the smoke tests pass, destroy the clone:
+
+```bash
+qm stop $CLONE_ID
+qm destroy $CLONE_ID
+```
+
+Don't leave it running — it's a disposable artifact.
+
+- [ ] **Step 1: Run `--profile developer` against the clone**
 
 ```bash
 cd /projects/dfe-developer/ansible
-./test.sh --profile developer --limit ubuntu
+INVENTORY=/tmp/inventory_test.yml ./test.sh --profile developer --limit ubuntu
 ```
 
 Expected: `PLAY RECAP` with `failed=0`.
 
-- [ ] **Step 2: Run OSS-safe assertion on the VM**
+- [ ] **Step 2: Run OSS-safe assertion on the clone**
 
 ```bash
-scp tests/assertions/oss_safe.sh dfe@dfe-dev-u.tyrell.com.au:/tmp/
-ssh dfe@dfe-dev-u.tyrell.com.au "bash /tmp/oss_safe.sh"
+CLONE_HOST=dfe@<CLONE_IP>    # from Step 0
+scp tests/assertions/oss_safe.sh "$CLONE_HOST":/tmp/
+ssh "$CLONE_HOST" "bash /tmp/oss_safe.sh"
 ```
 
 Expected: "OSS-safe check PASSED."
 
-- [ ] **Step 3: Reset VM, run `--profile core,all`**
+- [ ] **Step 3: Roll back the clone, run `--profile core,all`**
 
 ```bash
-./test.sh --profile core,all --limit ubuntu
+# On devex.hyperi.io Proxmox host:
+qm rollback 9100 pre-dfe && qm start 9100
+# Wait ~60s for SSH to come back.
+
+# On your workstation:
+INVENTORY=/tmp/inventory_test.yml ./test.sh --profile core,all --limit ubuntu
 ```
 
-Expected: `PLAY RECAP` with `failed=0`. Manually verify on the VM that Slack, Linear, JFrog, WireGuard, Freelens are all installed.
+Expected: `PLAY RECAP` with `failed=0`. SSH back in and manually verify Slack, Linear CLI, JFrog CLI, WireGuard, Freelens are all installed.
 
 - [ ] **Step 4: Record results**
 
@@ -2138,16 +2192,19 @@ Implements the Track 1 role structure refactor per
 - [ ] bats tests pass (`bats tests/bats/install_profile.bats`)
 - [ ] Syntax check passes
 - [ ] Check-mode profile matrix passes (`./test.sh --matrix`)
-- [ ] `--profile developer` VM smoke test on Ubuntu 24.04 + OSS-safe assertion
-- [ ] `--profile core,all` VM smoke test on Ubuntu 24.04
+- [ ] `--profile developer` VM smoke test on Ubuntu 24.04 (devex VMID 9010 clone) + OSS-safe assertion
+- [ ] `--profile core,all` VM smoke test on Ubuntu 24.04 (devex VMID 9010 clone)
 - [ ] `--profile core,openvpn` VM smoke test (transition path)
 - [ ] Peer review before merge
 
-## Follow-ups (Track 2)
+**Fedora coverage:** deferred — no Fedora test VM currently available. Fedora paths verified via check-mode matrix only. Follow-up issue to re-run the full matrix against Fedora once a test template exists on devex.hyperi.io.
 
-Items flagged during audit for Ubuntu 26.04 compatibility are captured in
-`docs/plans/2026-04-18-audit-findings.md` under "Flag for Track 2" and
-will be addressed in the Track 2 spec.
+## Follow-ups
+
+- Track 2: Ubuntu 26.04 compatibility + DRAGONFLY gaps.
+  Items flagged during audit in `docs/plans/2026-04-18-audit-findings.md`.
+- Fedora VM smoke testing: provision a Fedora 42 template on
+  `devex.hyperi.io` and re-run the full profile matrix against it.
 EOF
 )"
 ```
