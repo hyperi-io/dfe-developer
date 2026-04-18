@@ -1166,6 +1166,7 @@ Goal: extract Hyperi-specific items from `developer` and `developer_core` into t
 - Move: `ansible/roles/developer/files/branding/avatar.svg` → `ansible/roles/core/files/branding/avatar.svg`
 - Modify: `ansible/roles/developer/tasks/main.yml` — remove the "Deploy user avatar for GDM login screen" block (currently around lines 60-68)
 - Create: `ansible/roles/core/tasks/wireguard.yml`
+- Create: `ansible/roles/core/tasks/rclone.yml`
 - Modify: `ansible/roles/core/tasks/main.yml` (replace skeleton)
 - Modify: `ansible/roles/core/tasks/wallpaper.yml` — update any `wallpaper_name` set_fact to reference `background.svg` (the actual filename, not `default-background.svg`)
 
@@ -1204,6 +1205,36 @@ Open `ansible/roles/core/tasks/wallpaper.yml` and `ansible/roles/core/tasks/avat
 
 ```bash
 grep -rn 'branding\|background.svg\|avatar.svg' ansible/roles/core/
+```
+
+- [ ] **Step 1e: Create rclone.yml**
+
+rclone is a multi-backend cloud storage CLI used against Hyperi's storage (MinIO on `storage.devex.hyperi.io`). Installed as part of the Hyperi tier, not general OSS, because its presence implies a Hyperi workflow.
+
+```yaml
+---
+# rclone — multi-backend cloud storage sync CLI
+# Upstream: https://rclone.org
+
+- name: Install rclone (Fedora)
+  ansible.builtin.dnf:
+    name: rclone
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install rclone (Ubuntu)
+  ansible.builtin.apt:
+    name: rclone
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install rclone (macOS via Homebrew)
+  community.general.homebrew:
+    name: rclone
+    state: present
+  environment: "{{ homebrew_env }}"
+  become: false
+  when: ansible_facts['distribution'] == 'MacOSX'
 ```
 
 - [ ] **Step 2: Create wireguard.yml**
@@ -1276,6 +1307,11 @@ grep -rn 'branding\|background.svg\|avatar.svg' ansible/roles/core/
     file: jfrog.yml
   tags: ['jfrog']
 
+- name: Install rclone (Hyperi storage sync)
+  ansible.builtin.include_tasks:
+    file: rclone.yml
+  tags: ['rclone']
+
 - name: Install WireGuard (default Hyperi VPN)
   ansible.builtin.include_tasks:
     file: wireguard.yml
@@ -1297,13 +1333,13 @@ grep -rn 'branding\|background.svg\|avatar.svg' ansible/roles/core/
 - [ ] **Step 4: Check-mode test**
 
 ```bash
-./install.sh --check --profile core 2>&1 | grep -iE "slack|linear|jfrog|wireguard|wallpaper|avatar"
+./install.sh --check --profile core 2>&1 | grep -iE "slack|linear|jfrog|rclone|wireguard|wallpaper|avatar"
 ```
 
-Expected: all six surface.
+Expected: all seven surface.
 
 ```bash
-./install.sh --check --profile developer 2>&1 | grep -iE "slack|linear|jfrog|wireguard|hyperi" | wc -l
+./install.sh --check --profile developer 2>&1 | grep -iE "slack|linear|jfrog|rclone|wireguard|hyperi" | wc -l
 ```
 
 Expected: **0** (Hyperi items must NOT run in OSS tier).
