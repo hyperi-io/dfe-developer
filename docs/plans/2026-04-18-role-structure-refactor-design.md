@@ -53,6 +53,15 @@ Four pressures make this the right moment to refactor:
 - `--tags` remains available for ad-hoc runs.
 - If no `--profile` is given, default is `developer` (lean, safe, public-friendly). Hyperi users are expected to pass `--profile core`; the Hyperi-facing README makes that prominent.
 
+**Invocation edge-case rules:**
+- `--profile developer,core` — treated as a no-op alias for `--profile core` (redundant but harmless; implementation deduplicates the base tier).
+- `--profile all` alone — expands to `--profile developer,rust,iac,gui_extras` (the default base tier is `developer`).
+- `--profile openvpn` alone — **hard validation error**: openvpn requires `core` (its peer config is Hyperi-specific). Error message: `"--profile openvpn requires --profile core"`.
+- `--profile rust` / `--profile iac` / `--profile gui_extras` alone — valid; base tier defaults to `developer`.
+- Unknown profile name — **hard validation error** listing valid profiles.
+
+The `install.sh` script performs this validation before invoking Ansible, so errors surface early with clear messages.
+
 ### Role layout
 
 ```
@@ -102,7 +111,8 @@ Everything useful for general dev work on an open-source project (DFE, ESH). No 
 **General user-facing apps (opt-outable):**
 - Bitwarden (`install_bitwarden`), OnlyOffice (`install_onlyoffice`), Mailspring (`install_mailspring`), Claude Code CLI
 
-**Verify**
+**Final:**
+- `verify.yml` — confirms every tool in the tier installed successfully
 
 ### `core` tier — Hyperi internal add-ons
 
@@ -184,13 +194,14 @@ Known intentional pins (do not touch):
 - `install.sh --core` → aliases to `--profile core,rust,iac` (old `--core` was "everything advanced") with a deprecation warning for one release, then removed.
 - `install.sh --all` → aliases to `--profile core,all`.
 - The `developer_core` role is removed from `playbooks/main.yml`. Any inventory/vars explicitly referencing it will fail loudly; migration notes in the README tell users to swap to `--profile core,rust,iac`.
+- **`--tags developer_core` is not aliased** — scripts/CI passing that tag must be updated manually. The migration note in the README calls this out explicitly.
 
 ## Testing
 
 - `test.sh` adds profile-matrix check-mode runs: `developer`-only, `core`-only, `core,rust`, `core,iac`, `core,all`, `developer,rust`. Catches playbook-level regressions before VM testing.
 - Full end-to-end VM test on fresh Ubuntu 24.04:
   - Run 1: `--profile core,all` — Hyperi full install
-  - Run 2: `--profile developer` — OSS baseline, confirm no Hyperi tooling leaks in (Slack not present, Linear CLI not present, etc.)
+  - Run 2: `--profile developer` — OSS baseline, confirm no Hyperi tooling leaks in. **Automated assertion:** post-run script greps `apt list --installed` and `which` for Slack, linear-cli, jfrog-cli, wireguard, and the Hyperi wallpaper/avatar paths — any hit fails the test. This makes the OSS-safe guarantee enforceable rather than a manual goal.
 - macOS runs validated in check-mode only — existing posture.
 
 ## Risks and mitigations
