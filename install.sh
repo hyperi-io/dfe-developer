@@ -12,11 +12,12 @@
 #
 # OPTIONS:
 #   --check              Run in check mode (dry-run, no changes)
-#   --tags TAGS          Include specific tags (alias for --tags-include)
-#   --tags-include TAGS  Include specific tags to run (comma-separated)
+#   --profile PROFILE    Profiles to install (comma-separated: developer, core,
+#                        rust, iac, gui_extras, openvpn, all). See --help for details.
+#   --tags TAGS          Ad-hoc Ansible tags (overrides --profile if both given)
 #   --tags-exclude TAGS  Exclude specific tags from running (comma-separated)
-#   --core               Install core developer tools (JFrog, Azure, Node.js, etc.)
-#   --all                Install everything (base + core + VM + RDP + winlike)
+#   --core               DEPRECATED — alias for --profile core,rust,iac
+#   --all                DEPRECATED — alias for --profile core,all
 #   --help               Show this help message
 #
 # SUPPORTED PLATFORMS:
@@ -145,6 +146,7 @@ ANSIBLE_TAGS=""
 ANSIBLE_SKIP_TAGS=""
 ANSIBLE_EXTRA_VARS=""
 GIT_BRANCH="main"
+RESOLVED_TAGS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in

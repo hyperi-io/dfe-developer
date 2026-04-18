@@ -140,10 +140,12 @@ if $WINLIKE_OVERRIDE && [[ "$TAGS" == *"maclike"* ]]; then
 fi
 
 # Matrix mode: run each profile combination in --check mode and exit
+# Pass through --limit and -i so invocations like `./test.sh --matrix --limit ubuntu`
+# actually reach the intended host instead of silently running against the default.
 if $MATRIX_MODE; then
     for profile in developer core "core,rust" "core,iac" "core,gui_extras" "core,all" "core,openvpn" "developer,rust"; do
         echo "=== Matrix: --profile $profile ==="
-        "$0" --profile "$profile" --check $EXTRA_ARGS
+        "$0" --profile "$profile" --check -i "$INVENTORY" $LIMIT $EXTRA_ARGS
     done
     exit 0
 fi
