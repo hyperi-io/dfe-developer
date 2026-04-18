@@ -1,0 +1,6 @@
+---
+# rust role - to be populated in later chunks
+
+- name: Entering rust role (skeleton)
+  ansible.builtin.debug:
+    msg: "rust role placeholder - populated by chunks 2-3"

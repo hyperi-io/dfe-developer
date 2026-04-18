@@ -1,0 +1,6 @@
+---
+# gui_extras role - to be populated in later chunks
+
+- name: Entering gui_extras role (skeleton)
+  ansible.builtin.debug:
+    msg: "gui_extras role placeholder - populated by chunks 2-3"

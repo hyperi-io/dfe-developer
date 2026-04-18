@@ -1,0 +1,6 @@
+---
+# openvpn role - to be populated in later chunks
+
+- name: Entering openvpn role (skeleton)
+  ansible.builtin.debug:
+    msg: "openvpn role placeholder - populated by chunks 2-3"

@@ -1,0 +1,6 @@
+---
+# core role - to be populated in later chunks
+
+- name: Entering core role (skeleton)
+  ansible.builtin.debug:
+    msg: "core role placeholder - populated by chunks 2-3"

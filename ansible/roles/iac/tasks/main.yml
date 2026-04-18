@@ -1,0 +1,6 @@
+---
+# iac role - to be populated in later chunks
+
+- name: Entering iac role (skeleton)
+  ansible.builtin.debug:
+    msg: "iac role placeholder - populated by chunks 2-3"
