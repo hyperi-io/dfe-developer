@@ -1,0 +1,29 @@
+---
+# Bruno — Git-native, local-first API client (FOSS Postman alternative)
+
+- name: Install Bruno (Ubuntu)
+  block:
+    - name: Add Bruno GPG key
+      ansible.builtin.get_url:
+        url: https://www.usebruno.com/gpg-key.asc
+        dest: /usr/share/keyrings/bruno-archive-keyring.asc
+        mode: '0644'
+
+    - name: Add Bruno APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/bruno-archive-keyring.asc] https://usebruno.jfrog.io/artifactory/bruno-apt bruno main"
+        filename: bruno
+        state: present
+        update_cache: true
+
+    - name: Install Bruno package
+      ansible.builtin.apt:
+        name: bruno
+        state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install Bruno (Fedora via flatpak)
+  ansible.builtin.command: flatpak install -y flathub com.usebruno.Bruno
+  register: bruno_flatpak
+  changed_when: "'already installed' not in bruno_flatpak.stdout | default('')"
+  when: ansible_facts['distribution'] == 'Fedora'

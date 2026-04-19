@@ -1,5 +1,6 @@
 ---
-# Kubernetes tools installation (kubectl, k9s, kubectx/kubens, Minikube, ArgoCD, Freelens, dive)
+# Kubernetes tools installation (kubectl, k9s, kubectx/kubens, Minikube, ArgoCD, dive)
+# Note: Freelens GUI moved to the `gui_extras` role.
 
 # ============================================================================
 # KUBECTL - Dynamic version detection
@@ -150,16 +151,7 @@
 
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 
-# Freelens - Flatpak (GUI only)
-
-- name: Install Freelens (system-wide)
-  community.general.flatpak:
-    name: app.freelens.Freelens
-    state: present
-    method: system
-  when:
-    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
-    - has_gnome | default(false)
+# Freelens (flatpak GUI) moved to the `gui_extras` role.
 
 # ============================================================================
 # macOS - Install via Homebrew
