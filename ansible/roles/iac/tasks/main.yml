@@ -1,6 +1,10 @@
 ---
-# iac role - to be populated in later chunks
+# Infrastructure-as-code + Kubernetes tooling
 
-- name: Entering iac role (skeleton)
-  ansible.builtin.debug:
-    msg: "iac role placeholder - populated by chunks 2-3"
+- name: Install HashiCorp tooling (Terraform, Vault, Helm)
+  ansible.builtin.include_tasks:
+    file: hashicorp.yml
+
+- name: Install Kubernetes tooling
+  ansible.builtin.include_tasks:
+    file: k8s.yml

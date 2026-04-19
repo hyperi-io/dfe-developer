@@ -137,13 +137,6 @@
       tags: ['cloud']
   tags: ['cloud']
 
-- name: Install Kubernetes tools
-  ansible.builtin.include_tasks:
-    file: k8s.yml
-    apply:
-      tags: ['k8s']
-  tags: ['k8s']
-
 - name: Install data platform tools
   ansible.builtin.include_tasks:
     file: data_tools.yml
