@@ -393,6 +393,31 @@ Install path note: upstream's apt repo (`https://usebruno.jfrog.io/artifactory/b
 Legacy OpenVPN 3 stack. Opt-in only; `core` now defaults to WireGuard. Scheduled
 for removal once the internal WireGuard migration completes.
 
+This profile exists so operators who still have OpenVPN-only endpoints can install the client stack until those endpoints are cut over. New installs should prefer the WireGuard setup included in `core`.
+
+### openvpn3 CLI
+
+**Upstream:** https://openvpn.net/openvpn-3-linux/
+**What it does:** Modern OpenVPN 3 client CLI — imports `.ovpn` profiles, manages sessions via a D-Bus daemon.
+**Why it's installed:** Legacy OpenVPN endpoints during the WireGuard migration window.
+**Why this tool:** OpenVPN 3 supersedes the older `openvpn` package — faster, runs as an unprivileged daemon, and supports session-based profile management. Installed from the official OpenVPN repos (Ubuntu) / packaged via dnf (Fedora).
+
+### openvpn3-indicator (Ubuntu only)
+
+**Upstream:** https://github.com/OpenVPN/openvpn3-indicator (community GTK tray)
+**What it does:** GNOME/GTK status-tray indicator for openvpn3 sessions.
+**Why it's installed:** Gives a visible up/down indicator on the desktop — useful because openvpn3 sessions aren't managed by NetworkManager and don't surface in the standard networking menu.
+**Why this tool:** Only maintained tray integration for openvpn3 on modern GNOME. Ubuntu-only because the packaging targets GNOME on Ubuntu; Fedora users can run `openvpn3 sessions-list` from the shell.
+
+### netcfg systemd-resolved fix
+
+**Upstream:** n/a — in-repo workaround documented at https://community.openvpn.net/openvpn/wiki/OpenVPN3LinuxDNSSetup
+**What it does:** Drops a config snippet so openvpn3's `netcfg` agent pushes DNS into systemd-resolved instead of trying to rewrite `/etc/resolv.conf` directly.
+**Why it's installed:** On Ubuntu 24.04 + Fedora 42, systemd-resolved owns `/etc/resolv.conf`. Without this fix, openvpn3 reverts DNS to public resolvers and internal names fail to resolve over the VPN.
+**Why this tool:** This is a config snippet, not a tool — the canonical workaround recommended by OpenVPN upstream. Idempotent; applied only on Linux.
+
+**Removal plan:** this profile is flagged as transitional. Once the remaining OpenVPN-only endpoints are migrated to WireGuard, the `openvpn` profile and the `--profile core,openvpn` invocation will be removed in a follow-up release.
+
 ## Opt-out variables
 
 Centralised in `ansible/inventories/localhost/group_vars/all.yml`. All default to `true`
