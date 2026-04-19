@@ -32,6 +32,34 @@
 
 ## Security
 
+## Next: rename `dfe-developer` → `hyperi-developer`
+
+Queued after the role-structure refactor (PR #5) merges. Scope:
+
+- **Refactor** all internal references from `dfe-developer` / `DFE` to
+  `hyperi-developer` / `hyperi`. Grep every `ansible/`, `install.sh`,
+  `docs/`, `README.md`, `CHANGELOG.md`, task comments, etc. — no partial
+  rename that leaves mixed naming.
+- **Rename the upstream GitHub repo** `hyperi-io/dfe-developer` →
+  `hyperi-io/hyperi-developer`. Update the tarball URL baked into
+  `install.sh` (currently downloads from
+  `github.com/hyperi-io/dfe-developer/archive/...`) so fresh installs
+  still work after the rename. GitHub keeps a redirect for old repo URLs
+  but the clone path in the script should match the new canonical name.
+- **Remove the legacy `/fedora` path.** The top-level `fedora/` directory
+  pre-dates the Ansible-driven setup — audit what's still referenced
+  from it (if anything) and delete.
+- **Update `dfe-infra` auto-desktop-build pipelines** to use the new repo
+  URL (`hyperi-io/hyperi-developer`) wherever they currently clone or
+  tarball-download from `hyperi-io/dfe-developer`. Without this, Packer /
+  cloud-init / Proxmox templates continue pulling from the old path
+  (which will 404 once GitHub stops serving the redirect, or silently
+  diverge if the old repo is archived rather than deleted).
+
+Open a separate spec + plan under `docs/plans/` for this. No rush to
+start before the refactor merges; having two large in-flight PRs on
+the same surface area will cause painful conflicts.
+
 ## Role-structure refactor follow-ups
 
 - **[parked]** VM smoke tests for `feat/role-structure-refactor`. Full
