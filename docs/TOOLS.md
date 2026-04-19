@@ -284,6 +284,69 @@ Rust toolchain plus the build-cache + linker stack used across Hyperi's Rust ser
 
 Infrastructure-as-code: HashiCorp CLI set plus the Kubernetes operator kit.
 
+### Terraform
+
+**Upstream:** https://developer.hashicorp.com/terraform
+**What it does:** Declarative infra provisioning — AWS, Azure, GCP, Kubernetes, etc.
+**Why it's installed:** The IaC language for every provisioning workflow we maintain.
+**Why this tool:** Keeping Terraform (not OpenTofu) for now because all the providers and modules Hyperi uses are still tracking the Terraform releases. Installed from the official HashiCorp repo so the CLI version stays current. If/when OpenTofu achieves provider/module parity for our modules, the switch is a one-line repo change.
+
+### Vault
+
+**Upstream:** https://developer.hashicorp.com/vault
+**What it does:** Secrets management — KV, dynamic credentials, PKI, transit encryption.
+**Why it's installed:** Client for the Vault server that fronts most internal credentials.
+**Why this tool:** Vault is the established secrets backend. The `vault` CLI is the scriptable interface — `openbao` is API-compatible but we still pin the Vault binary to match server capabilities.
+
+### Helm
+
+**Upstream:** https://helm.sh/
+**What it does:** Package manager for Kubernetes (templated manifests + release lifecycle).
+**Why it's installed:** Required to install and operate most third-party Kubernetes workloads (Argo, cert-manager, external-secrets, etc.).
+**Why this tool:** Helm is the de-facto standard; many charts (including the ones we consume) ship only as Helm charts. `helmfile` is not installed here — teams that need it install per-project.
+
+### kubectl
+
+**Upstream:** https://kubernetes.io/docs/reference/kubectl/
+**What it does:** Kubernetes CLI — apply manifests, inspect resources, port-forward, exec, logs.
+**Why it's installed:** The primary interface to every Kubernetes cluster we run.
+**Why this tool:** `kubectl` version is auto-detected from `https://dl.k8s.io/release/stable.txt` at install time so the CLI tracks the latest stable release (Kubernetes' skew policy supports ±1 minor relative to the server).
+
+### k9s
+
+**Upstream:** https://k9scli.io/
+**What it does:** Terminal UI for Kubernetes — live resource browsing, drill-down, context switching.
+**Why it's installed:** Day-to-day cluster inspection without typing `kubectl get pods -n … -w` loops.
+**Why this tool:** k9s is the mature TUI — fast, scriptable keybindings, and integrates with `kubectl` plug-ins. GUI alternatives live in `gui_extras` (Freelens).
+
+### kubectx + kubens
+
+**Upstream:** https://github.com/ahmetb/kubectx
+**What it does:** Fast context and namespace switchers for `kubectl`.
+**Why it's installed:** Switching between clusters and namespaces is constant; `kubectl config use-context` and `kubectl config set-context --current --namespace` are verbose.
+**Why this tool:** `kubectx`/`kubens` are the widely-adopted standalone scripts. `kubie` is a Rust alternative but has narrower ecosystem support.
+
+### minikube
+
+**Upstream:** https://minikube.sigs.k8s.io/
+**What it does:** Local single-node Kubernetes cluster in a VM or container.
+**Why it's installed:** Spin up an isolated cluster for PR tests without touching a shared environment.
+**Why this tool:** Minikube is the upstream-SIG project with the broadest driver support (kvm2, docker, podman, virtualbox). `kind` is also fine and some teams use it; minikube stays as the default because it supports more addons out of the box.
+
+### ArgoCD CLI
+
+**Upstream:** https://argo-cd.readthedocs.io/
+**What it does:** Client for ArgoCD GitOps controller — sync apps, inspect resources, trigger rollouts.
+**Why it's installed:** ArgoCD is the GitOps controller in the clusters we run; the CLI is how you script it.
+**Why this tool:** Official ArgoCD CLI; no third-party alternative worth considering. Installed from GitHub releases directly (distro packages are absent).
+
+### dive
+
+**Upstream:** https://github.com/wagoodman/dive
+**What it does:** Interactive Docker image layer explorer — shows file diffs per layer, wasted space, image efficiency.
+**Why it's installed:** Image-size debugging (usually on Rust services where a sloppy Dockerfile adds hundreds of MB).
+**Why this tool:** Dive is the only CLI that does this well. `docker image history` is useful but shows layers without per-file diffs.
+
 ## gui_extras profile
 
 Optional desktop developer GUIs. Skipped on headless hosts (gated on `has_gnome`).
