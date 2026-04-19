@@ -191,7 +191,9 @@
     apply:
       tags: ['brave']
   tags: ['brave']
-  when: has_gnome | default(false)
+  when:
+    - has_gnome | default(false)
+    - install_brave | default(true)
 
 - name: Apply browser privacy policies (Chrome + Brave)
   ansible.builtin.include_tasks:

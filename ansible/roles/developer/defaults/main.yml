@@ -41,7 +41,7 @@ desktop_region: ""
 # ============================================================================
 # OFFICE SUITE
 # ============================================================================
-# OnlyOffice is the default (better MS Office compatibility)
-# LibreOffice is opt-in for users who prefer it
-install_onlyoffice: true
+# OnlyOffice is the default (better MS Office compatibility) — opt-out via
+# `install_onlyoffice: false` in group_vars/all.yml (single source of truth).
+# LibreOffice is opt-in for users who prefer it.
 install_libreoffice: false
