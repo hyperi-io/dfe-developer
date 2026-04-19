@@ -8,3 +8,8 @@
 - name: Install Kubernetes tooling
   ansible.builtin.include_tasks:
     file: k8s.yml
+
+- name: Verify IaC tooling
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']
