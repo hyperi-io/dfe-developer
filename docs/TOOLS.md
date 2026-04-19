@@ -171,6 +171,48 @@ contributors on DFE or ESH. Installed by default with `./install.sh --profile de
 The `core` tier implies `developer` and adds the Hyperi-internal toolchain (internal
 package registry, chat/issue tracker, default VPN, branding).
 
+### Slack
+
+**Upstream:** https://slack.com/
+**What it does:** Team chat client (desktop GUI).
+**Why it's installed:** Primary async comms channel; shipped pre-configured for the Hyperi workspace.
+**Why this tool:** Canonical team messaging app. Installed via the official snap/flatpak/rpm rather than the browser-wrapped web version so desktop notifications, screen share, and workspace switching work reliably. Opt out via `install_slack=false` if you prefer the web UI.
+
+### Linear (Hyperi workspace)
+
+**Upstream:** https://linear.app/
+**What it does:** Issue tracker + project manager with a fast CLI and keyboard-first UI.
+**Why it's installed:** The team's canonical issue tracker. Shipping the CLI inside `core` means ticket automation works out of the box with the Hyperi workspace context.
+**Why this tool:** Linear replaced the previous Jira install — orders of magnitude faster, cleaner API, and the CLI is useful in scripts (auto-open a ticket on pipeline failure). Opt out via `install_linear=false`.
+
+### JFrog CLI
+
+**Upstream:** https://jfrog.com/getcli/
+**What it does:** Client for JFrog Artifactory / Xray / Distribution.
+**Why it's installed:** Pull and publish internal container images, OCI bundles, Helm charts, and cargo/npm packages from the Hyperi internal tier.
+**Why this tool:** The internal package registry runs on Artifactory, and `jf` is the only first-party client with both authentication helpers and the upload/download semantics we rely on. The Docker Desktop Artifactory plug-in is GUI-only and not a substitute.
+
+### rclone
+
+**Upstream:** https://rclone.org/
+**What it does:** Swiss-army CLI for object storage / cloud sync (S3, GCS, SFTP, WebDAV, plus many SaaS backends).
+**Why it's installed:** Mount or sync the Hyperi internal file tier during day-to-day work. Replaces bespoke `aws s3 sync` / NFS-mount scripts that were in the previous install.
+**Why this tool:** `rclone` is the only tool that handles every backend the team touches (S3-compatible MinIO, SMB, WebDAV, SSH) with consistent semantics. The crypt backend is also useful for storing backups at rest.
+
+### WireGuard
+
+**Upstream:** https://www.wireguard.com/
+**What it does:** Kernel-mode VPN with modern crypto and minimal config surface.
+**Why it's installed:** Default VPN for the Hyperi internal tier. Replaces OpenVPN 3 as the primary VPN; OpenVPN is now opt-in via the `openvpn` profile (transitional).
+**Why this tool:** WireGuard is in-kernel on both Ubuntu and Fedora, dramatically faster than OpenVPN, and the config is a single `/etc/wireguard/*.conf` file. The peer config is supplied by the operator via `wireguard_peer_config` (deliberately not shipped in the repo).
+
+### Wallpaper + avatar (Hyperi branding)
+
+**Upstream:** n/a — branded assets shipped with this repo.
+**What it does:** Sets the GNOME desktop wallpaper and default user avatar to the Hyperi-branded assets.
+**Why it's installed:** Light-touch visual marker that you're on a Hyperi-managed workstation — useful in screenshots, shared screens, and onboarding.
+**Why this tool:** In-repo asset + dconf write, not a third-party tool. Gated on `has_gnome` so it's a no-op on headless hosts. Trivial to skip via `--skip-tags wallpaper,avatar` if desired.
+
 ## rust profile
 
 Rust toolchain plus the build-cache + linker stack used across Hyperi's Rust services.
