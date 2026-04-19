@@ -31,11 +31,6 @@
     file: nodejs.yml
   tags: ['nodejs']
 
-- name: Install Rust and cargo tools
-  ansible.builtin.include_tasks:
-    file: rust.yml
-  tags: ['rust']
-
 - name: Install Linear CLI
   ansible.builtin.include_tasks:
     file: linear.yml

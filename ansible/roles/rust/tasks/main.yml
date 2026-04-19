@@ -1,6 +1,11 @@
 ---
-# rust role - to be populated in later chunks
+# Rust toolchain + cargo tools
 
-- name: Entering rust role (skeleton)
-  ansible.builtin.debug:
-    msg: "rust role placeholder - populated by chunks 2-3"
+- name: Install Rust and cargo tools
+  ansible.builtin.include_tasks:
+    file: rust.yml
+
+- name: Verify Rust toolchain
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']
