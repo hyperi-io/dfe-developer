@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two-tier base split: `developer` (OSS-safe) and `core` (Hyperi internal, implies `developer`).
 - Profile-based installation via `./install.sh --profile`: `rust`, `iac`, `gui_extras`, `openvpn` add-on profiles, plus `--profile` validation in `install.sh`.
 - Opt-out variables centralised in `ansible/inventories/localhost/group_vars/all.yml`
-  (`install_bitwarden`, `install_onlyoffice`, `install_mailspring`, `install_brave`, `install_slack`, `install_linear`).
+  (`install_bitwarden`, `install_onlyoffice`, `install_brave`, `install_slack`, `install_linear`).
 - New tools in the `developer` base: `wl-clipboard`, `kcat`.
 - New `gui_extras` profile: Freelens, Bruno, Podman Desktop, DBeaver Community, lazygit.
 - WireGuard as the default Hyperi VPN (now in `core`).
@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - NetBird CLI (removed in earlier PR; reaffirmed here — no longer part of `core`).
 - `developer_core` role directory.
+- Mailspring desktop email client (no longer used).
 
 ## [2.23.14](https://github.com/hyperi-io/dfe-developer/compare/v2.23.13...v2.23.14) (2026-02-20)
 

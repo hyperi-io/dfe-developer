@@ -5,7 +5,6 @@
 # --- developer tier (OSS) ---
 install_bitwarden: true
 install_onlyoffice: true
-install_mailspring: true
 install_brave: true
 
 # --- core tier (Hyperi internal) ---

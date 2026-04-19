@@ -163,12 +163,6 @@
     - has_gnome | default(false)
     - install_onlyoffice | default(true)
 
-- name: Install Mailspring email client
-  ansible.builtin.include_tasks:
-    file: mailspring.yml
-  when: install_mailspring | default(true)
-  tags: ['mailspring', 'email']
-
 - name: Install VS Code
   ansible.builtin.include_tasks:
     file: vscode.yml

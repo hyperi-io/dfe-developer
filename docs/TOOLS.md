@@ -145,13 +145,6 @@ contributors on DFE or ESH. Installed by default with `./install.sh --profile de
 **Why it's installed:** Review/author `.docx`/`.xlsx` attachments without Microsoft 365 roundtrips.
 **Why this tool:** Higher MS Office format fidelity than LibreOffice; FOSS and self-installable (no account required). Opt out via `install_onlyoffice=false`.
 
-### Mailspring
-
-**Upstream:** https://getmailspring.com/
-**What it does:** Cross-platform desktop email client with unified inbox.
-**Why it's installed:** IMAP/SMTP desktop client for users who don't want Thunderbird or a browser-only workflow.
-**Why this tool:** Actively maintained (unlike several abandoned Electron email clients), sane unified inbox, and works with workspace SMTP without plug-ins. Opt out via `install_mailspring=false`.
-
 ### kcat (kafkacat)
 
 **Upstream:** https://github.com/edenhill/kcat
@@ -427,7 +420,6 @@ Centralised in `ansible/inventories/localhost/group_vars/all.yml`. All default t
 |----------|---------|--------|
 | `install_bitwarden` | `true` | Bitwarden desktop password manager |
 | `install_onlyoffice` | `true` | OnlyOffice desktop editors |
-| `install_mailspring` | `true` | Mailspring email client |
 | `install_brave` | `true` | Brave browser |
 | `install_slack` | `true` | Slack desktop (core tier only) |
 | `install_linear` | `true` | Linear CLI (core tier only) |
@@ -435,5 +427,5 @@ Centralised in `ansible/inventories/localhost/group_vars/all.yml`. All default t
 
 Override examples:
 
-    ./install.sh --profile developer --extra-vars "install_mailspring=false"
+    ./install.sh --profile developer --extra-vars "install_onlyoffice=false"
     ./install.sh --profile core --extra-vars "install_slack=false install_linear=false"
