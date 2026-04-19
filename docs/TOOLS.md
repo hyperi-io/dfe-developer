@@ -217,6 +217,69 @@ package registry, chat/issue tracker, default VPN, branding).
 
 Rust toolchain plus the build-cache + linker stack used across Hyperi's Rust services.
 
+### rustup + cargo (stable toolchain)
+
+**Upstream:** https://rustup.rs/
+**What it does:** Manages Rust toolchains (stable/beta/nightly/custom) and installs the cargo package manager.
+**Why it's installed:** Every Hyperi Rust service builds against a current stable toolchain; `rustup` is the only supported way to track it.
+**Why this tool:** Distro Rust packages are always months behind and frequently break `cargo install` from-source workflows. `rustup` is the upstream-recommended install path and lets you pin per-project toolchains via `rust-toolchain.toml`. Distro `rust`/`rustc`/`cargo`/`clippy`/`rustfmt` packages are removed before rustup install to avoid PATH conflicts.
+
+### bacon
+
+**Upstream:** https://github.com/Canop/bacon
+**What it does:** Background Rust code checker — watches sources and re-runs `cargo check`/`clippy`/`test` on change.
+**Why it's installed:** Tight feedback loop while editing; noticeably snappier than `cargo-watch`.
+**Why this tool:** `bacon` renders diagnostics in a clean TUI with collapsible errors and has explicit support for running different jobs from keybindings. `cargo-watch` still works but is essentially unmaintained.
+
+### cargo-nextest
+
+**Upstream:** https://nexte.st/
+**What it does:** Next-gen Rust test runner — parallel, per-test isolation, richer reporting.
+**Why it's installed:** Standard test runner for Hyperi Rust projects; CI uses it too, so running it locally matches CI semantics.
+**Why this tool:** 2–3x faster than `cargo test` on multi-core machines, reports per-test timings, and handles flaky-test retries cleanly. Drop-in — existing `#[test]` functions work unchanged.
+
+### cargo-deny
+
+**Upstream:** https://github.com/EmbarkStudios/cargo-deny
+**What it does:** Lints the dependency graph for bans, license policy, duplicates, and advisories.
+**Why it's installed:** Policy gate for dependency hygiene. Enforces the SPDX license allow-list and the RustSec advisory DB.
+**Why this tool:** `cargo-deny` rolls up `cargo-audit` + license checking + dupe detection into one config file. CI runs it on every PR.
+
+### cargo-tarpaulin (Linux only)
+
+**Upstream:** https://github.com/xd009642/tarpaulin
+**What it does:** Code coverage for Rust (ptrace-based).
+**Why it's installed:** Report line/branch coverage on Rust services for the coverage target gates.
+**Why this tool:** `tarpaulin` is the most accurate no-rebuild-with-instrumentation option on Linux. `cargo-llvm-cov` is an alternative but requires nightly for branch coverage; tarpaulin stays on stable. Linux-only because it uses `ptrace`; macOS coverage runs through llvm-cov in CI.
+
+### cargo-chef
+
+**Upstream:** https://github.com/LukeMathWalker/cargo-chef
+**What it does:** Pre-caches dependency builds for multi-stage Docker image layers.
+**Why it's installed:** Shave Docker rebuild time on Rust services by caching a dependency-only layer.
+**Why this tool:** Chef is the accepted Rust-in-Docker caching recipe. Without it, any source change invalidates the full cargo build inside the Docker layer.
+
+### cargo-sweep
+
+**Upstream:** https://github.com/holmgr/cargo-sweep
+**What it does:** Cleans stale compilation artifacts from `target/` across projects.
+**Why it's installed:** Rust `target/` directories balloon quickly on a dev box; `cargo sweep --time 30` reclaims tens of gigabytes regularly.
+**Why this tool:** Safer than `rm -rf target/` — keeps recent artifacts to avoid re-downloading + re-compiling. No GC built into cargo itself.
+
+### sccache
+
+**Upstream:** https://github.com/mozilla/sccache
+**What it does:** Shared compilation cache that acts as a `rustc`/`cc` wrapper.
+**Why it's installed:** Cache incremental builds across projects and across `cargo clean` cycles. Configured as `build.rustc-wrapper` in `~/.cargo/config.toml`.
+**Why this tool:** Mozilla's `sccache` is the mature option with local-disk, S3, and GHA cache backends. Dramatically cuts cold-cache rebuild time after switching branches or running `cargo clean`.
+
+### mold (Linux x86_64)
+
+**Upstream:** https://github.com/rui314/mold
+**What it does:** Modern linker — drop-in replacement for `ld`/`lld`, 5–10x faster on incremental builds.
+**Why it's installed:** Linking is the long tail of Rust incremental builds; mold makes "change one line, rebuild, see result" feel instant.
+**Why this tool:** Written by the author of LLVM's `lld` with performance as the explicit goal. Wired in via `rustflags = ["-C", "link-arg=-fuse-ld=mold"]` in the global `~/.cargo/config.toml`. Native x86_64 Linux only — cross-compile targets fall back to BFD.
+
 ## iac profile
 
 Infrastructure-as-code: HashiCorp CLI set plus the Kubernetes operator kit.
