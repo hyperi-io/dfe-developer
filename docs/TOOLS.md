@@ -351,6 +351,43 @@ Infrastructure-as-code: HashiCorp CLI set plus the Kubernetes operator kit.
 
 Optional desktop developer GUIs. Skipped on headless hosts (gated on `has_gnome`).
 
+### Freelens
+
+**Upstream:** https://github.com/freelensapp/freelens
+**What it does:** GUI for Kubernetes clusters — resource browsing, log tailing, shell-in-pod, metrics.
+**Why it's installed:** Visual alternative to k9s for multi-cluster browsing and quick triage. Useful during incident calls where you want to share a screen, not a terminal.
+**Why this tool:** Freelens is the community-maintained continuation of the original OpenLens project after OpenLens was effectively abandoned. Lens Desktop (the commercial successor) requires a Mirantis account; Freelens is fully FOSS and account-free. Installed via Flatpak (Flathub) so it stays sandboxed and tracks upstream releases.
+
+### Bruno
+
+**Upstream:** https://www.usebruno.com/
+**What it does:** Git-native, local-first API client for REST/GraphQL/gRPC/WebSocket.
+**Why it's installed:** API exploration and testing without leaking requests to a cloud service.
+**Why this tool:** Chosen over Postman and Insomnia because Bruno is truly local-first with no account requirement, stores collections as plain-text `.bru` files suitable for version control, and has no telemetry. Postman now requires an account even for local use and pushes cloud sync; Insomnia's post-Kong-acquisition direction follows the same pattern.
+
+Install path note: upstream's apt repo (`https://usebruno.jfrog.io/artifactory/bruno-apt`) was decommissioned in early 2026, so Ubuntu installs via the official snap (`snap install bruno`). Fedora continues to use the Flathub flatpak.
+
+### Podman Desktop
+
+**Upstream:** https://podman-desktop.io/
+**What it does:** GUI for Podman (and Docker) — manage containers, pods, images, volumes, compose stacks.
+**Why it's installed:** Visual container management for users who prefer a GUI over `docker ps`/`podman ps`.
+**Why this tool:** Podman Desktop is FOSS, handles both Podman and Docker Engine backends, and has first-class Kubernetes integration (generate pod manifests, play kube). Docker Desktop on Linux is licensed and fully containerised inside a VM, which is overkill given Docker Engine already runs natively. Installed via Flathub.
+
+### DBeaver Community
+
+**Upstream:** https://dbeaver.io/
+**What it does:** Universal SQL database client (PostgreSQL, MySQL, ClickHouse, SQLite, and more).
+**Why it's installed:** Day-to-day SQL exploration and schema inspection against the internal Postgres and ClickHouse instances.
+**Why this tool:** DBeaver Community Edition is FOSS, covers every JDBC-speaking database the team touches, and the UI is consistent across backends. The commercial "DBeaver PRO" tier adds NoSQL and cloud-warehouse connectors that we don't need here. `pgcli` and `clickhouse-client` cover CLI use from the developer tier.
+
+### lazygit
+
+**Upstream:** https://github.com/jesseduffield/lazygit
+**What it does:** Terminal UI for git — staging, committing, rebasing, cherry-pick, log inspection.
+**Why it's installed:** Fast keyboard-driven git client for users who don't want to memorise all of git's porcelain.
+**Why this tool:** `lazygit` is the mature Go-based TUI — single binary, works over SSH, handles interactive rebase cleanly (one of git's more awkward commands from the CLI). `tig` is a lighter alternative but read-mostly; `lazygit` has full edit capability.
+
 ## openvpn profile (transitional)
 
 Legacy OpenVPN 3 stack. Opt-in only; `core` now defaults to WireGuard. Scheduled
