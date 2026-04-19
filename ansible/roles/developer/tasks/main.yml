@@ -126,6 +126,16 @@
       tags: ['cloud']
   tags: ['cloud']
 
+- name: Install Azure CLI
+  ansible.builtin.include_tasks:
+    file: azure.yml
+  tags: ['azure', 'cloud']
+
+- name: Install Google Cloud CLI
+  ansible.builtin.include_tasks:
+    file: gcloud.yml
+  tags: ['gcloud', 'cloud']
+
 - name: Install data platform tools
   ansible.builtin.include_tasks:
     file: data_tools.yml
