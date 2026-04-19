@@ -195,14 +195,6 @@
     - has_gnome | default(false)
     - install_brave | default(true)
 
-- name: Apply browser privacy policies (Chrome + Brave)
-  ansible.builtin.include_tasks:
-    file: browser_policies.yml
-    apply:
-      tags: ['browser_policies']
-  tags: ['browser_policies', 'chrome', 'brave']
-  when: has_gnome | default(false)
-
 - name: Install Bitwarden
   ansible.builtin.include_tasks:
     file: bitwarden.yml
