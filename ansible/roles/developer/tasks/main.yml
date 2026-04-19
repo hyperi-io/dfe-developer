@@ -143,6 +143,16 @@
       tags: ['data']
   tags: ['data']
 
+- name: Install C development tools
+  ansible.builtin.include_tasks:
+    file: c_tools.yml
+  tags: ['c_tools', 'dev']
+
+- name: Install Node.js and semantic-release
+  ansible.builtin.include_tasks:
+    file: nodejs.yml
+  tags: ['nodejs']
+
 - name: Install OnlyOffice Desktop Editors
   ansible.builtin.include_tasks:
     file: onlyoffice.yml
@@ -152,6 +162,12 @@
   when:
     - has_gnome | default(false)
     - install_onlyoffice | default(true)
+
+- name: Install Mailspring email client
+  ansible.builtin.include_tasks:
+    file: mailspring.yml
+  when: install_mailspring | default(true)
+  tags: ['mailspring', 'email']
 
 - name: Install VS Code
   ansible.builtin.include_tasks:
@@ -184,6 +200,32 @@
       tags: ['browser_policies']
   tags: ['browser_policies', 'chrome', 'brave']
   when: has_gnome | default(false)
+
+- name: Install Bitwarden
+  ansible.builtin.include_tasks:
+    file: bitwarden.yml
+  when: install_bitwarden | default(true)
+  tags: ['bitwarden']
+
+- name: Install Claude Code CLI
+  ansible.builtin.include_tasks:
+    file: claude.yml
+  tags: ['claude']
+
+- name: Install Gitleaks
+  ansible.builtin.include_tasks:
+    file: gitleaks.yml
+  tags: ['gitleaks']
+
+- name: Install act (local GitHub Actions)
+  ansible.builtin.include_tasks:
+    file: act.yml
+  tags: ['act', 'ci']
+
+- name: Disable telemetry and advertising
+  ansible.builtin.include_tasks:
+    file: telemetry.yml
+  tags: ['telemetry']
 
 - name: Apply GNOME configuration (winlike or maclike)
   ansible.builtin.include_tasks:

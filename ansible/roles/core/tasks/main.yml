@@ -1,6 +1,11 @@
 ---
 # Core — Hyperi internal tier (implies developer)
 
+- name: Load macOS variables
+  ansible.builtin.include_vars:
+    file: macos.yml
+  when: ansible_facts['distribution'] == 'MacOSX'
+
 - name: Install Slack
   ansible.builtin.include_tasks:
     file: slack.yml
@@ -39,3 +44,8 @@
     file: avatar.yml
   when: has_gnome | default(false)
   tags: ['avatar']
+
+- name: Verify core tier tools
+  ansible.builtin.include_tasks:
+    file: verify.yml
+  tags: ['verify']

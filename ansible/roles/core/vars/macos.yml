@@ -1,0 +1,18 @@
+---
+# Common variables for macOS Homebrew operations
+# Include both bin and sbin directories for full tool coverage
+
+homebrew_env:
+  PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_facts['env'].PATH }}"
+
+homebrew_cask_env:
+  PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_facts['env'].PATH }}"
+  SUDO_ASKPASS: "/tmp/askpass.sh"
+
+# For npm-based tools that need access to user's npm global directory
+npm_env:
+  PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ user_home }}/.npm-global/bin:{{ ansible_facts['env'].PATH }}"
+
+npm_config_env:
+  NPM_CONFIG_PREFIX: "{{ user_home }}/.npm-global"
+  PATH: "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{{ ansible_facts['env'].PATH }}"
