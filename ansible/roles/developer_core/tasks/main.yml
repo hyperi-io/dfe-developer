@@ -1,8 +1,0 @@
----
-# Developer Core - DEPRECATED
-# All tasks have been redistributed across: developer/, core/, rust/, iac/, openvpn/.
-# This role directory is scheduled for deletion in Task 3.6 of the role-structure-refactor.
-
-- name: Notify that developer_core is deprecated
-  ansible.builtin.debug:
-    msg: "developer_core role is deprecated and will be removed; use --profile developer/core instead."
