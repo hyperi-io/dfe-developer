@@ -56,17 +56,6 @@
     - has_gnome | default(false)
   tags: ['desktop']
 
-# Deploy avatar after GNOME is installed (moved from init.yml)
-- name: Deploy user avatar for GDM login screen
-  ansible.builtin.include_tasks:
-    file: avatar.yml
-    apply:
-      tags: ['desktop', 'avatar']
-  tags: ['desktop', 'avatar']
-  when:
-    - ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
-    - has_gnome | default(false)
-
 - name: Install Nemo file manager (replaces Nautilus as default)
   ansible.builtin.include_tasks:
     file: nemo.yml

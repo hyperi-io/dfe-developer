@@ -1,6 +1,6 @@
 ---
 # Default wallpaper installation
-# Uses default-background.svg from role's files directory
+# Uses branding/background.svg from role's files directory
 # Note: psutil is installed in developer/tasks/init.yml (consolidated there for all GNOME tasks)
 #
 # This runs with --tags wallpaper for standalone wallpaper deployment.
@@ -11,7 +11,8 @@
 
 - name: Set wallpaper filename
   ansible.builtin.set_fact:
-    wallpaper_name: "default-background.svg"
+    wallpaper_src: "branding/background.svg"
+    wallpaper_name: "background.svg"
 
 # ============================================================================
 # LINUX - Copy wallpaper and set via dconf
@@ -29,7 +30,7 @@
 
 - name: Copy wallpaper to local backgrounds directory (Linux)
   ansible.builtin.copy:
-    src: "{{ wallpaper_name }}"
+    src: "{{ wallpaper_src }}"
     dest: "/usr/local/share/backgrounds/{{ wallpaper_name }}"
     mode: '0644'
   when:
@@ -82,7 +83,7 @@
 
 - name: Copy wallpaper to user Pictures directory (macOS)
   ansible.builtin.copy:
-    src: "{{ wallpaper_name }}"
+    src: "{{ wallpaper_src }}"
     dest: "{{ user_home }}/Pictures/{{ wallpaper_name }}"
     mode: '0644'
   become: false
