@@ -30,11 +30,11 @@
 
 - name: Deploy Chrome policy (testing browser - minimal restrictions)
   ansible.builtin.copy:
-    dest: /etc/opt/chrome/policies/managed/hyperi.json
+    dest: /etc/opt/chrome/policies/managed/dfe.json
     mode: '0644'
     content: |
       {
-        "_comment": "HyperI Chrome Policy - Testing Browser (minimal restrictions)",
+        "_comment": "DFE Chrome Policy - Testing Browser (minimal restrictions)",
         "_philosophy": "Chrome is our web UI testing browser - no privacy restrictions that could break OAuth/SSO/cookies",
 
         "_section_locale": "=== LOCALE: Australian English ===",
@@ -95,11 +95,11 @@
 
 - name: Deploy Brave privacy policy (daily driver - privacy focused)
   ansible.builtin.copy:
-    dest: /etc/brave/policies/managed/hyperi.json
+    dest: /etc/brave/policies/managed/dfe.json
     mode: '0644'
     content: |
       {
-        "_comment": "HyperI Brave Policy - Daily Driver (privacy focused)",
+        "_comment": "DFE Brave Policy - Daily Driver (privacy focused)",
         "_philosophy": "Brave is our privacy browser - block tracking, allow internal sites",
 
         "_section_locale": "=== LOCALE: Australian English ===",
@@ -147,29 +147,25 @@
         "DefaultGeolocationSetting": 3,
         "DefaultNotificationsSetting": 2,
 
-        "_section_cookies": "=== COOKIES: Block 3rd party, allow internal sites ===",
+        "_section_cookies": "=== COOKIES: Block 3rd party, allow private + org-approved ===",
         "BlockThirdPartyCookies": true,
         "SitePerProcess": true,
-        "CookiesAllowedForUrls": [
-          "[*.]hyperi.io",
-          "[*.]devex.hyperi.io",
-          "[*.]hypersec.io",
-          "[*.]devex.hypersec.io",
-          "10.0.0.0/8",
-          "172.16.0.0/12",
-          "192.168.0.0/16"
-        ],
-        "ThirdPartyCookiesAllowedForUrls": [
-          "[*.]hyperi.io",
-          "[*.]devex.hyperi.io",
-          "[*.]hypersec.io",
-          "[*.]devex.hypersec.io",
-          "[*.]google.com",
-          "[*.]googleapis.com",
-          "[*.]microsoftonline.com",
-          "[*.]microsoft.com",
-          "[*.]github.com"
-        ],
+        "CookiesAllowedForUrls": {{
+          (browser_org_cookies_allowed | default([])) + [
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16"
+          ] | to_json
+        }},
+        "ThirdPartyCookiesAllowedForUrls": {{
+          (browser_org_third_party_cookies_allowed | default([])) + [
+            "[*.]google.com",
+            "[*.]googleapis.com",
+            "[*.]microsoftonline.com",
+            "[*.]microsoft.com",
+            "[*.]github.com"
+          ] | to_json
+        }},
 
         "_section_brave_specific": "=== BRAVE: Disable monetization features ===",
         "BraveRewardsDisabled": true,
@@ -177,31 +173,17 @@
         "BraveVPNDisabled": true,
         "BraveSyncUrl": "",
 
-        "_section_brave_shields": "=== BRAVE SHIELDS: Disabled for internal sites ===",
-        "BraveShieldsDisabledForUrls": [
-          "[*.]hyperi.io",
-          "[*.]devex.hyperi.io",
-          "[*.]hypersec.io",
-          "[*.]devex.hypersec.io",
-          "10.*",
-          "172.16.*",
-          "172.17.*",
-          "172.18.*",
-          "172.19.*",
-          "172.20.*",
-          "172.21.*",
-          "172.22.*",
-          "172.23.*",
-          "172.24.*",
-          "172.25.*",
-          "172.26.*",
-          "172.27.*",
-          "172.28.*",
-          "172.29.*",
-          "172.30.*",
-          "172.31.*",
-          "192.168.*"
-        ]
+        "_section_brave_shields": "=== BRAVE SHIELDS: Disabled for private + org-approved ===",
+        "BraveShieldsDisabledForUrls": {{
+          (browser_org_brave_shields_disabled | default([])) + [
+            "10.*",
+            "172.16.*", "172.17.*", "172.18.*", "172.19.*",
+            "172.20.*", "172.21.*", "172.22.*", "172.23.*",
+            "172.24.*", "172.25.*", "172.26.*", "172.27.*",
+            "172.28.*", "172.29.*", "172.30.*", "172.31.*",
+            "192.168.*"
+          ] | to_json
+        }}
       }
   when: ansible_facts['distribution'] in ['Fedora', 'Ubuntu']
 

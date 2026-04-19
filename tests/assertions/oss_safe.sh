@@ -28,6 +28,13 @@ check_absent "openvpn3"              "command -v openvpn3"
 # Hyperi branding leak — wallpaper.yml copies to /usr/local/share/backgrounds/
 check_absent "hyperi background"     "test -f /usr/local/share/backgrounds/background.svg"
 
+# Browser policy leak — managed Chrome/Brave JSON must not contain internal
+# allowlist domains when only the developer tier ran.
+check_absent "chrome policy allowlist leak" \
+    "grep -q -E 'hyperi\\.io|hypersec\\.io' /etc/opt/chrome/policies/managed/*.json 2>/dev/null"
+check_absent "brave policy allowlist leak" \
+    "grep -q -E 'hyperi\\.io|hypersec\\.io' /etc/brave/policies/managed/*.json 2>/dev/null"
+
 if [[ $FAIL -ne 0 ]]; then
     echo ""
     echo "OSS-safe check FAILED — Hyperi tooling leaked into developer tier."

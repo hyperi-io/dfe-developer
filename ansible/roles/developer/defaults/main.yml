@@ -45,3 +45,15 @@ desktop_region: ""
 # `install_onlyoffice: false` in group_vars/all.yml (single source of truth).
 # LibreOffice is opt-in for users who prefer it.
 install_libreoffice: false
+
+# ============================================================================
+# BROWSER POLICY ALLOWLISTS
+# ============================================================================
+# Managed Chrome/Brave policies ship with generic privacy hardening. Any
+# organisation-specific cookie / third-party-cookie / Brave-shields allowlists
+# live in these lists, which default to empty here (OSS-safe developer tier).
+# The core role (Hyperi internal tier) overrides these with the internal
+# allowlist.
+browser_org_cookies_allowed: []
+browser_org_third_party_cookies_allowed: []
+browser_org_brave_shields_disabled: []
