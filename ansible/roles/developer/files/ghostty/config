@@ -24,8 +24,11 @@ font-feature = +dlig
 # ============================================================
 # Theme - Auto-switches with system light/dark mode
 # ============================================================
-# Solarized: Classic developer theme with warm/cool variants
-theme = light:Builtin Solarized Light,dark:Builtin Solarized Dark
+# Solarized: Classic developer theme with warm/cool variants.
+# Ghostty's "Builtin Solarized" theme names were renamed/removed in a
+# recent release; the iTerm2 variants are the surviving Solarized themes
+# bundled with Ghostty.
+theme = light:iTerm2 Solarized Light,dark:iTerm2 Solarized Dark
 
 # ============================================================
 # Terminal Compatibility
